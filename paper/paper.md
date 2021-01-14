@@ -24,7 +24,12 @@ of the fastest available secure hash functions that is also collision-resistant
 as well as facilitates post-quantum digital signature schemes and zero-knowledge
 proofs of knowledge of a preimage (ZKPoKP). LibSWIFFT is optimized for short
 blocks of input and runs at a rate of less than 5 cycles/byte single-threaded on
-a modern commodity computer with AVX2.
+a modern commodity computer with AVX2. Other software providing SWIFFT, which
+are not claiming production-readiness as LibSWIFFT is, are the
+[original implementation by the authors of SWIFFT](https://github.com/micciancio/SWIFFT)
+and the SWIFFT [8-bit](https://github.com/anon1985/Swifft-avx2-8) and
+[16-bit](https://github.com/anon1985/K2SN-MSS/swifft16) AVX2 implementations for
+the multi-signature scheme [K2SN-MSS](https://eprint.iacr.org/2019/442.pdf).
 
 LibSWIFFT is currently intended to be used by cryptography researchers and
 developers. It provides clean easy-to-use C/C++ APIs with high-performance
