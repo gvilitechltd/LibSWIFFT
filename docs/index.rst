@@ -14,9 +14,6 @@ fastest available secure hash functions, which is also collision-resistant as
 well as facilitates zero-knowledge proofs of knowledge of a preimage (ZKPoKP)
 and post-quantum digital signatures.
 
-* :ref:`genindex`
-* :ref:`search`
-
 Secure Homomorphic Hashing
 --------------------------
 
