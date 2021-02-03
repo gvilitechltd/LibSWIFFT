@@ -60,7 +60,7 @@ LibSWIFFT also ships with detailed documentation, including references for its
 :libswifft:`C API <swifft.h>` and :libswifft:`C++ API <LibSwifft>`. It has a
 robust and portable build system based on `cmake <http://cmake.org>`_. All
 include files are conveniently organized under a dedicated
-`libswifft <../doxyhtml/files.html>`_ directory. Finally,
+`libswifft <api/files.html>`_ directory. Finally,
 it requires few dependencies at build-time and run-time.
 
 Easy to use C and C++ APIs
