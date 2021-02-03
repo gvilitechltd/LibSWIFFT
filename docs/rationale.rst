@@ -13,7 +13,7 @@ Why another implementation of SWIFFT?
 
 LibSWIFFT is a reliable building block for fast and scalable cryptographic protocols. It is simple to use and maintain, has clean APIs, is well documented and tested, and is at least as fast as other implementations of SWIFFT and often faster. Other implementations of SWIFFT are:
 
-- The `8-bit <https://github.com/anon1985/Swifft-avx2-8>`_ and `16-bit <https://github.com/anon1985/K2SN-MSS/swifft16>`_ AVX2 implementations for `K2SN-MSS <https://eprint.iacr.org/2019/442.pdf>`_. Both are arguably not as easy to use nor as well documented and tested as LibSWIFFT. The former is slower and uses less memory while the latter is about as fast as LibSWIFFT for AVX2 yet does not support AVX512.
+- The `8-bit <https://github.com/anon1985/Swifft-avx2-8>`_ and `16-bit <https://github.com/anon1985/K2SN-MSS/tree/master/swifft16>`_ AVX2 implementations for `K2SN-MSS <https://eprint.iacr.org/2019/442.pdf>`_. Both are arguably not as easy to use nor as well documented and tested as LibSWIFFT. The former is slower and uses less memory while the latter is about as fast as LibSWIFFT for AVX2 yet does not support AVX512.
 - `The original implementation <https://github.com/micciancio/SWIFFT>`_ written in 2007. It is minimal non-production code. `The AVX2 implementation for K2SN-MSS <https://eprint.iacr.org/2019/442.pdf>`_ is reported to be 25% faster.
 
 An invocation of the tests-executable of LibSWIFFT running single-threaded using AVX2 on an Intel Skylake microarchitecture (Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz):
