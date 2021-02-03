@@ -71,8 +71,10 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_extra_path = ['doxyhtml']
+
 # -- Doxylink extension configuration ----------------------------------------
 
 doxylink = {
-        "libswifft": ("_build/LibSWIFFT.tag", "../doxyhtml")
+        "libswifft": ("_build/LibSWIFFT.tag", ".")
 }
