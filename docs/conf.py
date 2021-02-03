@@ -76,5 +76,5 @@ html_extra_path = ['doxyhtml']
 # -- Doxylink extension configuration ----------------------------------------
 
 doxylink = {
-        "libswifft": ("_build/LibSWIFFT.tag", ".")
+        "libswifft": ("_build/LibSWIFFT.tag", "api")
 }
