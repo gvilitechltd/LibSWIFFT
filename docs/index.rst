@@ -6,6 +6,8 @@
 .. toctree::
    :maxdepth: 2
 
+.. image:: ../assets/LibSWIFFT-logo.png
+
 LibSWIFFT: Fast Secure Homomorphic Hashing
 ==========================================
 
