@@ -309,7 +309,7 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 			REQUIRE( output[k] != zerooutput );
 			SWIFFT_Add(output[0].data, output[k].data);
 		}
-		REQUIRE( output[0] == zerooutput );
+		REQUIRE( output[1] == zerooutput );
 	}
 	// check splitting a signed input and composing back outputs
 	for (int i=0; i<8; i++) {
@@ -376,7 +376,7 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 		}
 		SWIFFT_Sub(output[0].data, output[1].data);
 		SWIFFT_Sub(output[0].data, output[2].data);
-		REQUIRE( output[0] == zerooutput );
+		REQUIRE( output[1] == zerooutput );
 	}
 }
 
@@ -461,7 +461,7 @@ static const bool print = true;
 
 static SwifftInput specific_input1[ninputs] = {
 	{
-		0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8,
+		0xFE, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8,
 		0xF7, 0xF6, 0xF5, 0xF4, 0xF3, 0xF2, 0xF1, 0xF0,
 		0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8,
 		0xE7, 0xE6, 0xE5, 0xE4, 0xE3, 0xE2, 0xE1, 0xE0,
@@ -1070,17 +1070,17 @@ TEST_CASE( "swifft prints correctly (specific input)", "[swifft]" ) {
 	for (int i=0; i<ninputs; i++) {
 		std::stringstream s;
 		s << specific_input1[i];
-		REQUIRE( s.str() == specific_input1_string[i] );
+		REQUIRE( s.str() == specific_input1_string[i+1] );
 	}
 	for (int i=0; i<ninputs; i++) {
 		std::stringstream s;
 		s << specific_output1[i];
-		REQUIRE( s.str() == specific_output1_string[i] );
+		REQUIRE( s.str() == specific_output1_string[i+1] );
 	}
 	for (int i=0; i<ninputs; i++) {
 		std::stringstream s;
 		s << specific_compact1[i];
-		REQUIRE( s.str() == specific_compact1_string[i] );
+		REQUIRE( s.str() == specific_compact1_string[1] );
 	}
 	std::cerr << std::endl;
 }
