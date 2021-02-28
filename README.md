@@ -2,6 +2,10 @@
 
 # LibSWIFFT - A fast C/C++ library for the SWIFFT secure homomorphic hash function
 
+- [Official Repository](https://github.com/gvilitechltd/LibSWIFFT)
+- [![Documentation Status](https://readthedocs.org/projects/libswifft/badge/?version=latest)](http://libswifft.readthedocs.io/en/latest/)
+- [![Packaging Status](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/badge.svg?branch=main)](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/)
+
 LibSWIFFT is a production-ready C/C++ library providing SWIFFT, one of the fastest available secure hash functions, which is also collision-resistant as well as facilitates zero-knowledge proofs of knowledge of a preimage (ZKPoKP) and post-quantum digital signatures. It is based on academic work from 2007 described further below.
 
 **Why now, in early 2021?** In late 2017, NIST has started a [process for standardizing post-quantum cryptography](https://csrc.nist.gov/Projects/post-quantum-cryptography/post-quantum-cryptography-standardization), suggesting that it believes it may not be too long before a practical quantum-computer that threatens critical security standards (including Internet ones) based on classical cryptography will become a reality. About two years later, Google announced it had achieved [quantum supremacy](https://en.wikipedia.org/wiki/Quantum_supremacy), by completing in 200 seconds a task they claimed would have taken a classical supercomputer about 10,000 years to complete. Though IBM, maker of the most powerful supercomputer at the time, disputed this claim and asserted the supercomputer would take only about 2.5 days for the task, it is clear quantum computing technology is advancing quickly. Consequently, post-quantum cryptography is becoming more relevant today and perhaps even urgent to develop.
