@@ -5,6 +5,9 @@
 - [Official Repository](https://github.com/gvilitechltd/LibSWIFFT)
 - [![Documentation Status](https://readthedocs.org/projects/libswifft/badge/?version=latest)](http://libswifft.readthedocs.io/en/latest/)
 - [![Packaging Status](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/badge.svg?branch=main)](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/)
+- **Quick start on Linux**: Ensure `docker` is installed and runnable, clone this repository and go to its root directory, and run the command `docker build . && docker run --rm -it $(docker build -q .)` to build and test LibSWIFFT.
+
+## Introducing LibSWIFFT
 
 LibSWIFFT is a production-ready C/C++ library providing SWIFFT, one of the fastest available secure hash functions, which is also collision-resistant as well as facilitates zero-knowledge proofs of knowledge of a preimage (ZKPoKP) and post-quantum digital signatures. It is based on academic work from 2007 described further below.
 
