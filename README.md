@@ -118,13 +118,14 @@ Assignment and equality operators are available for `Swifft{Input,Output,Compact
 
 Currently, LibSWIFFT is implemented to be built using GCC. It has been tested on Linux Ubuntu 20.04 LTS using
 
-- `GCC 9.3.0`: GCC is normally installed using `sudo apt-get install gcc`.
+- `GCC 9.3.0`: GCC is normally installed using `sudo apt-get install gcc g++`.
 - `cmake 3.16.3`: CMake is normally installed using `sudo apt-get install cmake`.
 - `Catch 2.13.2`: Catch2 is normally installed (as [documented here](https://github.com/catchorg/Catch2/blob/v2.x/docs/cmake-integration.md#installing-catch2-from-git-repository)) using
 
 ```sh
 git clone https://github.com/catchorg/Catch2.git
 cd Catch2
+git checkout v2.13.2
 cmake -Bbuild -H. -DBUILD_TESTING=OFF
 sudo cmake --build build/ --target install
 ```
