@@ -62,11 +62,11 @@ jobs:
       if: ${{ !env.ACT }}
       with:
         name: libswifft-${{ steps.get_version.outputs.version }}.tgz
-        path: package/libswifft-${{ steps.get_version.outputs.version }}.tgz
+        path: pack/package/libswifft-${{ steps.get_version.outputs.version }}.tgz
     # upload package omp
     - name: upload package omp
       uses: actions/upload-artifact@v2
       if: ${{ !env.ACT }}
       with:
         name: libswifft-${{ steps.get_version.outputs.version }}-omp.tgz
-        path: package/libswifft-${{ steps.get_version.outputs.version }}-omp.tgz
+        path: pack-omp/package/libswifft-${{ steps.get_version.outputs.version }}-omp.tgz
