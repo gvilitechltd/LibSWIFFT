@@ -8,6 +8,7 @@
  */
 #include <iostream>
 #include <sstream>
+#include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 #include <catch2/catch.hpp>
@@ -97,26 +98,49 @@ TEST_CASE( "swifft takes at most 2000 cycles per call", "[.][swifftperf]" ) {
 	});
 }
 
-template<int nblocks>
-void test_swifft_block_cycles(double cycles_per_block_limit) {
+template <class T>
+struct Array
+{
+	T* array;
+	Array(int length) :
+		array(static_cast<T*>(aligned_alloc(SWIFFT_ALIGNMENT, length * sizeof(T))))
+	{
+	}
+	~Array() {
+		free(array);
+		array = NULL;
+	}
+};
+
+#ifdef _OPENMP
+	#define LABEL_OPENMP "(OpenMP)"
+#else
+	#define LABEL_OPENMP ""
+#endif
+void test_swifft_block_cycles(int nblocks, int nrepeats, double cycles_per_block_limit) {
 	srand(1);
-	SwifftInput input[nblocks] = {0};
-	SwifftOutput output[nblocks] = {0};
-	randomize(input, nblocks);
-	int nrepeats = 10;
-	test_swifft_iter_cycles(nrepeats, nblocks, cycles_per_block_limit, "blocks", [&input, &output, nrepeats]() {
+	Array<SwifftInput> input(nblocks);
+	Array<SwifftOutput> output(nblocks);
+	randomize(input.array, nblocks);
+	test_swifft_iter_cycles(nrepeats, nblocks, cycles_per_block_limit, "blocks" LABEL_OPENMP, [&input, &output, nblocks, nrepeats]() {
 		for (int r=0; r<nrepeats; r++) {
-			SWIFFT_ComputeMultiple(nblocks, input[0].data, output[0].data);
+			SWIFFT_ComputeMultiple(nblocks, input.array[0].data, output.array[0].data);
 		}
 	});
 }
 
-TEST_CASE( "swifft takes at most 2000 cycles per block in-cache", "[.][swifftperf]" ) {
-	test_swifft_block_cycles<1000>(2000);
+TEST_CASE( "swifft takes at most 2000 cycles per block in-small-memory", "[.][swifftperf]" ) {
+	int nblocks = 1000, nrepeats = 10, cycles_per_block_limit = 2000;
+	test_swifft_block_cycles(nblocks, nrepeats, cycles_per_block_limit);
 }
 
-TEST_CASE( "swifft takes at most 4000 cycles per block in-memory", "[.][swifftperf]" ) {
-	test_swifft_block_cycles<10000>(4000);
+TEST_CASE( "swifft takes at most 4000 cycles per block in-medium-memory", "[.][swifftperf]" ) {
+	int nblocks = 10000, nrepeats = 10, cycles_per_block_limit = 4000;
+	test_swifft_block_cycles(nblocks, nrepeats, cycles_per_block_limit);
+}
+
+TEST_CASE( "swifft takes at most 4000 cycles per block in-large-memory", "[.][swifftperf]" ) {
+	test_swifft_block_cycles(1000000, 1, 4000);
 }
 
 TEST_CASE( "swifft FFT-only takes at most 2000 cycles per call", "[.][swifftperf]" ) {
@@ -1083,6 +1107,99 @@ TEST_CASE( "swifft prints correctly (specific input)", "[swifft]" ) {
 		REQUIRE( s.str() == specific_compact1_string[i] );
 	}
 	std::cerr << std::endl;
+}
+
+#define TEST_CODE(op) \
+TEST_CASE( "swifft multiple " LIBSWIFFT_QUOTE(op) " computes correctly", "[swifft]" ) { \
+	const int n = 128; \
+	SwifftInput input1[n]; \
+	SwifftOutput output1[n]; \
+	SwifftOutput output2[n]; \
+	int16_t operand[n]; \
+	srand(1); \
+	for (int i=0; i<n; i++) { \
+		operand[i] = (int16_t)rand(); \
+	} \
+	randomize(input1, n); \
+	SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data); \
+	for (int i=0; i<n; i++) { \
+		output2[i] = output1[i]; \
+	} \
+	for (int i=0; i<n; i++) { \
+		SWIFFT_##op(output1[i].data, operand[i]); \
+	} \
+	for (int i=0; i<n; i++) { \
+		REQUIRE(output1[i] != output2[i]); \
+	} \
+	SWIFFT_##op##Multiple(n, output2[0].data, operand); \
+	for (int i=0; i<n; i++) { \
+		REQUIRE(output1[i] == output2[i]); \
+	} \
+}
+
+TEST_CODE(ConstSet)
+TEST_CODE(ConstAdd)
+TEST_CODE(ConstSub)
+TEST_CODE(ConstMul)
+#undef TEST_CODE
+
+#define TEST_CODE(op) \
+TEST_CASE( "swifft multiple " LIBSWIFFT_QUOTE(op) " computes correctly", "[swifft]" ) { \
+	const int n = 128; \
+	SwifftInput input1[n]; \
+	SwifftInput input2[n]; \
+	SwifftOutput output0[n]; \
+	SwifftOutput output1[n]; \
+	SwifftOutput output2[n]; \
+	srand(1); \
+	randomize(input1, n); \
+	randomize(input2, n); \
+	SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data); \
+	SWIFFT_ComputeMultiple(n, input2[0].data, output2[0].data); \
+	for (int i=0; i<n; i++) { \
+		output0[i] = output1[i]; \
+	} \
+	for (int i=0; i<n; i++) { \
+		SWIFFT_##op(output1[i].data, output2[i].data); \
+	} \
+	for (int i=0; i<n; i++) { \
+		REQUIRE(output0[i] != output1[i]); \
+	} \
+	SWIFFT_##op##Multiple(n, output0[0].data, output2[0].data); \
+	for (int i=0; i<n; i++) { \
+		REQUIRE(output0[i] == output1[i]); \
+	} \
+}
+
+TEST_CODE(Set)
+TEST_CODE(Add)
+TEST_CODE(Sub)
+TEST_CODE(Mul)
+#undef TEST_CODE
+
+TEST_CASE( "swifft multiple compact computes correctly", "[swifft]" ) {
+	const int n = 128;
+	SwifftInput input1[n];
+	SwifftOutput output1[n];
+	SwifftOutput output2[n];
+	SwifftCompact compact1[n];
+	SwifftCompact compact2[n];
+	srand(1);
+	randomize(input1, n);
+	SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data);
+	for (int i=0; i<n; i++) {
+		output2[i] = output1[i];
+	}
+	for (int i=0; i<n; i++) {
+		SWIFFT_Compact(output1[i].data, compact1[i].data);
+	}
+	for (int i=0; i<n; i++) {
+		REQUIRE(compact1[i] != compact2[i]);
+	}
+	SWIFFT_CompactMultiple(n, output2[0].data, compact2[0].data);
+	for (int i=0; i<n; i++) {
+		REQUIRE(compact1[i] == compact2[i]);
+	}
 }
 
 } // end namespace LibSwifft

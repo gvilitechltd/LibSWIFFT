@@ -83,6 +83,13 @@ void SWIFFT_ConstSub(BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 void SWIFFT_ConstMul(BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 	const int16_t operand);
 
+//! \brief Sets a SWIFFT hash value to another, element-wise.
+//!
+//! \param[in,out] output the hash value of SWIFFT to modify.
+//! \param[in] operand the hash value to set to.
+void SWIFFT_Set(BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
+	const BitSequence operand[SWIFFT_OUTPUT_BLOCK_SIZE]);
+
 //! \brief Adds a SWIFFT hash value to another, element-wise.
 //!
 //! \param[in,out] output the hash value of SWIFFT to modify.
@@ -103,6 +110,98 @@ void SWIFFT_Sub(BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 //! \param[in] operand the hash value to multiply by.
 void SWIFFT_Mul(BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 	const BitSequence operand[SWIFFT_OUTPUT_BLOCK_SIZE]);
+
+//! \brief Computes the FFT phase of SWIFFT for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in] input the blocks of input, each of 256 bytes (2048 bits).
+//! \param[in] sign the blocks of sign bits corresponding to blocks of input of 256 bytes (2048 bits).
+//! \param[in] m number of 8-elements in the input.
+//! \param[out] fftout the blocks of FFT-output elements, totaling N*m.
+void SWIFFT_fftMultiple(int nblocks, const BitSequence * LIBSWIFFT_RESTRICT input, const BitSequence * LIBSWIFFT_RESTRICT sign, int m, int16_t * LIBSWIFFT_RESTRICT fftout);
+
+//! \brief Computes the FFT-sum phase of SWIFFT for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in] ikey the SWIFFT key.
+//! \param[in] ifftout the blocks of FFT-output elements, totaling N*m
+//! \param[in] m number of 8-elements in the input.
+//! \param[out] iout the blocks of output elements, each of 64 double-bytes (1024 bits).
+void SWIFFT_fftsumMultiple(int nblocks, const int16_t * LIBSWIFFT_RESTRICT ikey,
+        const int16_t * LIBSWIFFT_RESTRICT ifftout, int m, int16_t * LIBSWIFFT_RESTRICT iout);
+
+//! \brief Compacts a hash value of SWIFFT for multiple blocks.
+//! The result is not composable with other compacted hash values.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in] output the hash value of SWIFFT, of size 128 bytes (1024 bit).
+//! \param[out] compact the compacted hash value of SWIFFT, of size 64 bytes (512 bit).
+void SWIFFT_CompactMultiple(int nblocks, const BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
+	BitSequence compact[SWIFFT_COMPACT_BLOCK_SIZE]);
+
+//! \brief Sets a constant value at each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[out] output the hash value of SWIFFT to modify, per block.
+//! \param[in] operand the constant value to set, per block.
+void SWIFFT_ConstSetMultiple(int nblocks, BitSequence * output,
+	const int16_t * operand);
+
+//! \brief Adds a constant value to each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block.
+//! \param[in] operand the constant value to add, per block.
+void SWIFFT_ConstAddMultiple(int nblocks, BitSequence * output,
+	const int16_t * operand);
+
+//! \brief Subtracts a constant value from each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block.
+//! \param[in] operand the constant value to subtract, per block.
+void SWIFFT_ConstSubMultiple(int nblocks, BitSequence * output,
+	const int16_t * operand);
+
+//! \brief Multiply a constant value into each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block.
+//! \param[in] operand the constant value to multiply by, per block.
+void SWIFFT_ConstMulMultiple(int nblocks, BitSequence * output,
+	const int16_t * operand);
+
+//! \brief Sets a SWIFFT hash value to another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify.
+//! \param[in] operand the hash value to set to.
+void SWIFFT_SetMultiple(int nblocks, BitSequence * output,
+	const BitSequence * operand);
+
+//! \brief Adds a SWIFFT hash value to another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify.
+//! \param[in] operand the hash value to add.
+void SWIFFT_AddMultiple(int nblocks, BitSequence * output,
+	const BitSequence * operand);
+
+//! \brief Subtracts a SWIFFT hash value from another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify.
+//! \param[in] operand the hash value to subtract.
+void SWIFFT_SubMultiple(int nblocks, BitSequence * output,
+	const BitSequence * operand);
+
+//! \brief Multiplies a SWIFFT hash value from another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify.
+//! \param[in] operand the hash value to multiply by.
+void SWIFFT_MulMultiple(int nblocks, BitSequence * output,
+	const BitSequence * operand);
 
 //! \brief Computes the result of a SWIFFT operation.
 //! The result is composable with other hash values.

@@ -47,7 +47,7 @@ sets to take advantage of available hardware acceleration.
 Production-Ready
 ----------------
 
-LibSWIFFT v1.0.0 ships with over 20 test-cases including millions of checks that
+LibSWIFFT v1.1.0 ships with over 30 test-cases including millions of checks that
 provide excellent coverage of the library's code and the mathematical properties
 of the SWIFFT function it implements:
 
@@ -56,7 +56,7 @@ of the SWIFFT function it implements:
     $ ./test/swifft_catch
 
     ===============================================================================
-    All tests passed (6646079 assertions in 23 test cases)
+    All tests passed (6648383 assertions in 32 test cases)
 
 LibSWIFFT also ships with detailed documentation, including references for its
 :libswifft:`C API <swifft.h>` and :libswifft:`C++ API <LibSwifft>`. It has a

@@ -12,11 +12,11 @@ The code repository can be cloned using `git <https://git-scm.com>`_:
     git clone https://github.com/gvilitechltd/LibSWIFFT
     cd LibSWIFFT
 
-To switch to a specific version of LibSWIFFT, such as v1.0.0, use:
+To switch to a specific version of LibSWIFFT, such as `v1.1.0`, use:
 
 .. code-block:: sh
 
-    git checkout v1.0.0
+    git checkout v1.1.0
 
 As an alternative to getting the repository, a specific version of LibSWIFFT can
 be obtained from `GitHub <https://github.com/gvilitechltd/LibSWIFFT>`_ by
@@ -25,9 +25,9 @@ Then, unpack the archive and change into the unpacked directory, e.g.:
 
 .. code-block:: sh
 
-    wget https://github.com/gvilitechltd/LibSWIFFT/archive/v1.0.0.zip
-    unzip v1.0.0.zip
-    cd LibSWIFFT-1.0.0
+    wget https://github.com/gvilitechltd/LibSWIFFT/archive/v1.1.0.zip
+    unzip v1.1.0.zip
+    cd LibSWIFFT-1.1.0
 
 Building LibSWIFFT
 ------------------
@@ -73,6 +73,12 @@ By default, the build will be for the native machine. To build with different ma
 
     cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_MACHINE_COMPILE_FLAGS=-march=skylake
 
+To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
+
+.. code-block:: sh
+
+    cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_ENABLE_OPENMP=On
+
 After building, run the tests-executable from the `build/release` directory:
 
 .. code-block:: sh
@@ -117,7 +123,7 @@ Typical code using the C API:
     SWIFFT_Compute(input, sign, output); /* compute the hash of the signed input into the output */
     SWIFFT_Compact(output, compact); /* optionally, compact the hash */
 
-Buffers must be memory-aligned using `SWIFFT_ALIGN` in order to avoid a segmentation fault when passed to `LibSWIFFT` functions. The transformation functions `SWIFFT_{Compute,Compact}Multiple{,Signed}*` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block.
+Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions `SWIFFT_{Compute,Compact}Multiple{,Signed}*` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block, while `SWIFFT_{Const,}{Set,Add,sub,Mul}Multiple*` provide corresponding operations to multiple blocks.
 
 Typical code using the C++ API:
 

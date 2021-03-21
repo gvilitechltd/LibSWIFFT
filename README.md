@@ -49,12 +49,12 @@ Nevertheless, the family is not pseudorandom, due to the homomorphism property, 
 LibSWIFFT was implemented with reference to the [SWIFFTX submission to NIST](https://csrc.nist.gov/projects/hash-functions/sha-3-project) and provides the same SWIFFT hash function that is part of the submission. High speed is achieved using various code optimization techniques, including SIMD instructions that are very natural for the implementation of the SWIFFT function. Compared to the SWIFFT code in the submission, LibSWIFFT adds the following:
 
 1. Automatic library initialization using build-time generation of internal tables.
-2. Convenient APIs, including for homomorphic operations, for computing SWIFFT on short inputs.
+2. Convenient APIs, including for homomorphic operations and parallel variations based on OpenMP, for computing SWIFFT on short inputs.
 3. Support for input vectors of either binary-valued (in {0,1}) or trinary-valued (in {-1,0,1}) elements.
 4. Bug fixes with respect to the reference submission, in particular related to the homomorphism property.
 5. Performance improvements compared to the reference submission.
 6. Support for newer CPU instruction sets: AVX, AVX2, and AVX512.
-7. Over 20 test-cases providing excellent coverage of the APIs and the mathematical properties of SWIFFT.
+7. Over 30 test-cases providing excellent coverage of the APIs and the mathematical properties of SWIFFT.
 
 Formally, LibSWIFFT provides a single hash function that maps from an input domain `Z_2^{2048}` (taking 256B) to an output domain `Z_{257}^{64}` (taking 128B, at 2B per element) and then to a compact domain `Z_{256}^{65}` (taking 65B). The computation of the first map is done over `Z_{257}`. The homomorphism property applies to the input and output domains, but not to the compact domain, and is revealed when the binary-valued input domain is naturally embedded in `Z_{257}^{2048}`. Generally, it is computationally hard to find a binary-valued pre-image given an output computed as the sum of `N` outputs corresponding to known binary-valued pre-images. On the other hand, it is easy to find a small-valued pre-image (over `Z_{257}^{2048}`) when `N` is small, since it is simply the sum of the known pre-images due to the homomorphism property.
 
@@ -92,7 +92,7 @@ SWIFFT_Compute(input, sign, output); /* compute the hash of the signed input int
 SWIFFT_Compact(output, compact); /* optionally, compact the hash */
 ```
 
-Buffers must be memory-aligned using `SWIFFT_ALIGN` in order to avoid a segmentation fault when passed to `LibSWIFFT` functions. The transformation functions `SWIFFT_{Compute,Compact}Multiple{,Signed}*` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block.
+Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions `SWIFFT_{Compute,Compact}Multiple{,Signed}*` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block, while `SWIFFT_{Const,}{Set,Add,sub,Mul}Multiple*` provide corresponding operations to multiple blocks.
 
 Typical code using the C++ API:
 
@@ -155,6 +155,12 @@ By default, the build will be for the native machine. To build with different ma
 
 ```sh
 cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_MACHINE_COMPILE_FLAGS=-march=skylake
+```
+
+To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
+
+```sh
+cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_ENABLE_OPENMP=On
 ```
 
 After building, run the tests-executable from the `build/release` directory:

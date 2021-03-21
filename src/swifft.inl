@@ -7,8 +7,13 @@
  * \brief LibSWIFFT internal C code expansion
  */
 #include <stddef.h> // for size_t
+#include <string.h> // for memcpy
 #include "libswifft/swifft_iset.inl"
 #include "swifft_ops.inl"
+
+#ifndef SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD
+	#define SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD 8
+#endif
 
 LIBSWIFFT_BEGIN_EXTERN_C
 
@@ -160,6 +165,16 @@ void SWIFFT_ISET_NAME(SWIFFT_ConstMul_)(BitSequence output[SWIFFT_OUTPUT_BLOCK_S
 	}
 }
 
+//! \brief Sets a SWIFFT hash value to another, element-wise.
+//!
+//! \param[in,out] output the hash value of SWIFFT to modify.
+//! \param[in] operand the hash value to set to.
+void SWIFFT_ISET_NAME(SWIFFT_Set_)(BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
+	const BitSequence operand[SWIFFT_OUTPUT_BLOCK_SIZE])
+{
+	memcpy(output, operand, sizeof(BitSequence)*SWIFFT_OUTPUT_BLOCK_SIZE);
+}
+
 //! \brief Adds a SWIFFT hash value to another, element-wise.
 //!
 //! \param[in,out] output the hash value of SWIFFT to modify.
@@ -248,6 +263,234 @@ void SWIFFT_ISET_NAME(SWIFFT_ComputeSigned_)(const BitSequence input[SWIFFT_INPU
 	SWIFFT_compute(input, sign, output);
 }
 
+//! \brief Computes the FFT phase of SWIFFT for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in] input the blocks of input, each of 256 bytes (2048 bits).
+//! \param[in] sign the blocks of sign bits corresponding to blocks of input of 256 bytes (2048 bits).
+//! \param[in] m number of 8-elements in the input.
+//! \param[out] fftout the blocks of FFT-output elements, totaling nblocks*N*m.
+void SWIFFT_ISET_NAME(SWIFFT_fftMultiple_)(int nblocks, const BitSequence * LIBSWIFFT_RESTRICT input, const BitSequence * LIBSWIFFT_RESTRICT sign, int m, int16_t * LIBSWIFFT_RESTRICT fftout)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_fft_)(
+			input + i * SWIFFT_INPUT_BLOCK_SIZE,
+			sign + i * SWIFFT_INPUT_BLOCK_SIZE,
+			m,
+			fftout + i * SWIFFT_N * SWIFFT_M
+		);
+	}
+}
+
+//! \brief Computes the FFT-sum phase of SWIFFT for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in] ikey the SWIFFT key.
+//! \param[in] ifftout the blocks of FFT-output elements, totaling N*m
+//! \param[in] m number of 8-elements in the input.
+//! \param[out] iout the blocks of output elements, each of 64 double-bytes (1024 bits).
+void SWIFFT_ISET_NAME(SWIFFT_fftsumMultiple_)(int nblocks, const int16_t * LIBSWIFFT_RESTRICT ikey,
+        const int16_t * LIBSWIFFT_RESTRICT ifftout, int m, int16_t * LIBSWIFFT_RESTRICT iout)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_fftsum_)(
+			ikey,
+			ifftout + i * SWIFFT_N * SWIFFT_M,
+			m,
+			iout + i * (SWIFFT_OUTPUT_BLOCK_SIZE / sizeof(int16_t))
+		);
+	}
+}
+
+//! \brief Compacts a hash value of SWIFFT for multiple blocks.
+//! The result is not composable with other compacted hash values.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in] output the hash value of SWIFFT, of size 128 bytes (1024 bit) per block.
+//! \param[out] compact the compacted hash value of SWIFFT, of size 64 bytes (512 bit) per block.
+void SWIFFT_ISET_NAME(SWIFFT_CompactMultiple_)(int nblocks, const BitSequence * output,
+        BitSequence * compact)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_Compact(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			compact + i * SWIFFT_COMPACT_BLOCK_SIZE
+		);
+	}
+}
+
+//! \brief Sets a constant value at each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[out] output the hash value of SWIFFT to modify, per block.
+//! \param[in] operand the constant value to set, per block.
+void SWIFFT_ISET_NAME(SWIFFT_ConstSetMultiple_)(int nblocks, BitSequence * output,
+        const int16_t * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_ConstSet_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand[i]
+		);
+	}
+}
+
+//! \brief Adds a constant value to each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block.
+//! \param[in] operand the constant value to add, per block.
+void SWIFFT_ISET_NAME(SWIFFT_ConstAddMultiple_)(int nblocks, BitSequence * output,
+        const int16_t * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_ConstAdd_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand[i]
+		);
+	}
+}
+
+//! \brief Subtracts a constant value from each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block..
+//! \param[in] operand the constant value to subtract, per block.
+void SWIFFT_ISET_NAME(SWIFFT_ConstSubMultiple_)(int nblocks, BitSequence * output,
+        const int16_t * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_ConstSub_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand[i]
+		);
+	}
+}
+
+//! \brief Multiply a constant value into each SWIFFT hash value element for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block..
+//! \param[in] operand the constant value to multiply by, per block.
+void SWIFFT_ISET_NAME(SWIFFT_ConstMulMultiple_)(int nblocks, BitSequence * output,
+        const int16_t * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_ConstMul_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand[i]
+		);
+	}
+}
+
+//! \brief Sets a SWIFFT hash value to another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block..
+//! \param[in] operand the hash value to set to, per block.
+void SWIFFT_ISET_NAME(SWIFFT_SetMultiple_)(int nblocks, BitSequence * output,
+        const BitSequence * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_Set_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand + i * SWIFFT_OUTPUT_BLOCK_SIZE
+		);
+	}
+}
+
+//! \brief Adds a SWIFFT hash value to another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block..
+//! \param[in] operand the hash value to add, per block.
+void SWIFFT_ISET_NAME(SWIFFT_AddMultiple_)(int nblocks, BitSequence * output,
+        const BitSequence * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_Add_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand + i * SWIFFT_OUTPUT_BLOCK_SIZE
+		);
+	}
+}
+
+//! \brief Subtracts a SWIFFT hash value from another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block..
+//! \param[in] operand the hash value to subtract, per block.
+void SWIFFT_ISET_NAME(SWIFFT_SubMultiple_)(int nblocks, BitSequence * output,
+        const BitSequence * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_Sub_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand + i * SWIFFT_OUTPUT_BLOCK_SIZE
+		);
+	}
+}
+
+//! \brief Multiplies a SWIFFT hash value from another, element-wise, for multiple blocks.
+//!
+//! \param[in] nblocks the number of blocks to operate on.
+//! \param[in,out] output the hash value of SWIFFT to modify, per block..
+//! \param[in] operand the hash value to multiply by, per block.
+void SWIFFT_ISET_NAME(SWIFFT_MulMultiple_)(int nblocks, BitSequence * output,
+        const BitSequence * operand)
+{
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_ISET_NAME(SWIFFT_Mul_)(
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE,
+			operand + i * SWIFFT_OUTPUT_BLOCK_SIZE
+		);
+	}
+}
+
 //! \brief Computes the result of multiple SWIFFT operations.
 //! The result is composable with other hash values.
 //!
@@ -256,10 +499,16 @@ void SWIFFT_ISET_NAME(SWIFFT_ComputeSigned_)(const BitSequence input[SWIFFT_INPU
 //! \param[out] output the resulting blocks of hash values of SWIFFT, each of size 128 bytes (1024 bit).
 void SWIFFT_ISET_NAME(SWIFFT_ComputeMultiple_)(int nblocks, const BitSequence * input, BitSequence * output)
 {
-	while (nblocks-- > 0) {
-		SWIFFT_compute(input, SWIFFT_sign0, output);
-		input += SWIFFT_INPUT_BLOCK_SIZE;
-		output += SWIFFT_OUTPUT_BLOCK_SIZE;
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_compute(
+			input + i * SWIFFT_INPUT_BLOCK_SIZE,
+			SWIFFT_sign0,
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE
+		);
 	}
 }
 
@@ -273,11 +522,16 @@ void SWIFFT_ISET_NAME(SWIFFT_ComputeMultiple_)(int nblocks, const BitSequence * 
 void SWIFFT_ISET_NAME(SWIFFT_ComputeMultipleSigned_)(int nblocks, const BitSequence * input,
 	const BitSequence * sign, BitSequence * output)
 {
-	while (nblocks-- > 0) {
-		SWIFFT_compute(input, sign, output);
-		input += SWIFFT_INPUT_BLOCK_SIZE;
-		sign += SWIFFT_INPUT_BLOCK_SIZE;
-		output += SWIFFT_OUTPUT_BLOCK_SIZE;
+	int i;
+#ifdef _OPENMP
+	#pragma omp parallel for schedule(static) private(i) if(nblocks > SWIFFT_BLOCKS_PARALLELIZATION_THRESHOLD)
+#endif
+	for (i=0; i<nblocks; i++) {
+		SWIFFT_compute(
+			input + i * SWIFFT_INPUT_BLOCK_SIZE,
+			sign + i * SWIFFT_INPUT_BLOCK_SIZE,
+			output + i * SWIFFT_OUTPUT_BLOCK_SIZE
+		);
 	}
 }
 
