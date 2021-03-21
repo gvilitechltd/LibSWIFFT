@@ -49,7 +49,7 @@ Nevertheless, the family is not pseudorandom, due to the homomorphism property, 
 LibSWIFFT was implemented with reference to the [SWIFFTX submission to NIST](https://csrc.nist.gov/projects/hash-functions/sha-3-project) and provides the same SWIFFT hash function that is part of the submission. High speed is achieved using various code optimization techniques, including SIMD instructions that are very natural for the implementation of the SWIFFT function. Compared to the SWIFFT code in the submission, LibSWIFFT adds the following:
 
 1. Automatic library initialization using build-time generation of internal tables.
-2. Convenient APIs, including for homomorphic operations and parallel variations based on OpemMP, for computing SWIFFT on short inputs.
+2. Convenient APIs, including for homomorphic operations and parallel variations based on OpenMP, for computing SWIFFT on short inputs.
 3. Support for input vectors of either binary-valued (in {0,1}) or trinary-valued (in {-1,0,1}) elements.
 4. Bug fixes with respect to the reference submission, in particular related to the homomorphism property.
 5. Performance improvements compared to the reference submission.
@@ -157,7 +157,7 @@ By default, the build will be for the native machine. To build with different ma
 cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_MACHINE_COMPILE_FLAGS=-march=skylake
 ```
 
-To build with OpemMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
+To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
 
 ```sh
 cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_ENABLE_OPENMP=On

@@ -73,7 +73,7 @@ By default, the build will be for the native machine. To build with different ma
 
     cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_MACHINE_COMPILE_FLAGS=-march=skylake
 
-To build with OpemMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
+To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
 
 .. code-block:: sh
 

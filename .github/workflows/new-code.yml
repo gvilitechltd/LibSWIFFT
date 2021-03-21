@@ -55,7 +55,7 @@ jobs:
       run: for conf in "" -omp; do build${conf}/test/swifft_catch; done
     # make package
     - name: make package
-      run: for conf in "" -omp; do (mkdir pack${conf} && cd pack${conf} && mkdir lib package && cp -p ../build/src/libswifft.{a,so} lib/ && cp -rp ../include . && tar czfv package/libswifft-${{ steps.get_version.outputs.version }}.tgz lib include); done
+      run: for conf in "" -omp; do (mkdir pack${conf} && cd pack${conf} && mkdir lib package && cp -p ../build/src/libswifft.{a,so} lib/ && cp -rp ../include . && tar czfv package/libswifft-${{ steps.get_version.outputs.version }}${conf}.tgz lib include); done
     # upload package
     - name: upload package
       uses: actions/upload-artifact@v2
