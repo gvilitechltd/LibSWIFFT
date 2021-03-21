@@ -67,12 +67,12 @@ foreach(SWIFFT_FILE
 	${CMAKE_CURRENT_BINARY_DIR}/swifft_so_dummy.c
 	${SWIFFT_SRC_FILES}
 )
-	set_source_files_properties(${SWIFFT_FILE} PROPERTIES COMPILE_FLAGS ${SWIFFT_DEFAULT_FILE_COMPILE_FLAGS})
+	set_source_files_properties(${SWIFFT_FILE} PROPERTIES COMPILE_FLAGS "${SWIFFT_DEFAULT_FILE_COMPILE_FLAGS}")
 endforeach()
 
-set_source_files_properties(swifft_avx.c    PROPERTIES COMPILE_FLAGS -mavx)
-set_source_files_properties(swifft_avx2.c   PROPERTIES COMPILE_FLAGS -mavx2)
-set_source_files_properties(swifft_avx512.c PROPERTIES COMPILE_FLAGS -mavx512f)
+set_source_files_properties(swifft_avx.c    PROPERTIES COMPILE_FLAGS "${SWIFFT_DEFAULT_FILE_COMPILE_FLAGS} -mavx")
+set_source_files_properties(swifft_avx2.c   PROPERTIES COMPILE_FLAGS "${SWIFFT_DEFAULT_FILE_COMPILE_FLAGS} -mavx2")
+set_source_files_properties(swifft_avx512.c PROPERTIES COMPILE_FLAGS "${SWIFFT_DEFAULT_FILE_COMPILE_FLAGS} -mavx512f")
 
 foreach(SWIFFT_TARGET
 	swifft_static

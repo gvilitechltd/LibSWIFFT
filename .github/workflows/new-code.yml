@@ -43,17 +43,19 @@ jobs:
     - name: mkdir
       run: mkdir build
     - name: cmake build
-      run: cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -H.
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -H.
+        cmake -DCMAKE_BUILD_TYPE=Release -DSWIFFT_ENABLE_OPENMP=On -Bbuild-omp -H.
     - name: cmake make
-      run: cmake --build build/ --target all
+      run: for conf in "" -omp; do cmake --build build${conf}/ --target all; done
       env:
         MAKEFLAGS: "-j2"
     # run tests
     - name: run main tests
-      run: build/test/swifft_catch
+      run: for conf in "" -omp; do build${conf}/test/swifft_catch; done
     # make package
     - name: make package
-      run: mkdir -p lib package && cp -p build/src/libswifft.{a,so} lib/ && tar czfv package/libswifft-${{ steps.get_version.outputs.version }}.tgz lib include
+      run: for conf in "" -omp; do (mkdir pack${conf} && cd pack${conf} && mkdir lib package && cp -p ../build/src/libswifft.{a,so} lib/ && cp -rp ../include . && tar czfv package/libswifft-${{ steps.get_version.outputs.version }}.tgz lib include); done
     # upload package
     - name: upload package
       uses: actions/upload-artifact@v2
@@ -61,3 +63,10 @@ jobs:
       with:
         name: libswifft-${{ steps.get_version.outputs.version }}.tgz
         path: package/libswifft-${{ steps.get_version.outputs.version }}.tgz
+    # upload package omp
+    - name: upload package omp
+      uses: actions/upload-artifact@v2
+      if: ${{ !env.ACT }}
+      with:
+        name: libswifft-${{ steps.get_version.outputs.version }}-omp.tgz
+        path: package/libswifft-${{ steps.get_version.outputs.version }}-omp.tgz
