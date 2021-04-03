@@ -4,7 +4,7 @@ User Guide
 Getting LibSWIFFT
 -----------------
 
-LibSWIFFT is available on `GitHub <https://github.com/gvilitechltd/LibSWIFFT>`.
+LibSWIFFT is available on `GitHub <https://github.com/gvilitechltd/LibSWIFFT>`_.
 The code repository can be cloned using `git <https://git-scm.com>`_:
 
 .. code-block:: sh
@@ -106,6 +106,20 @@ The version of LibSWIFFT is provided by the API in :libswifft:`swifft_ver.h`.
 
 The main LibSWIFFT C++ API is documented in :libswifft:`swifft.hpp`.
 
+An extended use of the LibSWIFFT API follows the following steps:
+
+.. |_| unicode:: 0xA0
+   :trim:
+
+- **Allocate buffers**: LibSWIFFT defines 3 types of buffers - input, output and compact. The input buffer ':libswifft:`BitSequence` |_| input[:libswifft:`SWIFFT_INPUT_BLOCK_SIZE`]' holds a vector in `Z_2^{2048}` where each element takes 1 bit, the output buffer ':libswifft:`BitSequence` |_| output[:libswifft:`SWIFFT_OUTPUT_BLOCK_SIZE`]' holds a vector in `Z_{257}^{64}` where each element takes 16 bits, and the compact buffer ':libswifft:`BitSequence` |_| compact[:libswifft:`SWIFFT_COMPACT_BLOCK_SIZE`]' holds a value in `Z_{256}^64` taking 64 bytes.
+- **Populate input buffers**: An input buffer is populated in preparation for hashing. This is normally done by directly setting the bits in the input buffer. Each bit corresponds to an element of the vector with a value in `{0,1}`.
+- **Populate sign buffers**: A sign buffer is an input buffer whose bits are interpreted as sign bits. A 0-valued (resp. 1-valued) bit corresponds to a positive (resp. negative) sign. When an input buffer and a sign buffer are taken together, they define a vector in `{-1,0,1}^{2048}`.
+- **Compute output buffers**: The hash of an input buffer, with or without a sign buffer, is computed into an output buffer. This is normally done using :libswifft:`SWIFFT_Compute` or :libswifft:`SWIFFT_ComputeSigned`.
+- **Perform arithmetic operations with output buffers**: LibSWIFFT provides several arithemtic (homomorphic) operations involving output buffers whose result is put into an output buffer. The vectors of output buffers may be added, subtracted, or multiplied element-wise. See below for more details.
+- **Compact the output buffer**: The hash in the output buffer is compacted into the compact buffer. This is an optional operation, in that the hash in the output buffer may be sufficient for certain applications.
+
+A more restricted use of the LibSWIFFT API involves only the steps of allocating buffers, populating input buffers, and computing output buffers.
+
 Typical code using the C API:
 
 .. code-block:: c
@@ -123,7 +137,8 @@ Typical code using the C API:
     SWIFFT_Compute(input, sign, output); /* compute the hash of the signed input into the output */
     SWIFFT_Compact(output, compact); /* optionally, compact the hash */
 
-Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions `SWIFFT_{Compute,Compact}Multiple{,Signed}*` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block, while `SWIFFT_{Const,}{Set,Add,sub,Mul}Multiple*` provide corresponding operations to multiple blocks.
+Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions :libswifft:`SWIFFT_ComputeMultiple`, :libswifft:`SWIFFT_ComputeSignedMultiple` and :libswifft:`SWIFFT_CompactMultiple` apply operations to multiple blocks. The arithmetic functions :libswifft:`SWIFFT_ConstSet`, :libswifft:`SWIFFT_ConstAdd`, :libswifft:`SWIFFT_ConstSub`, :libswifft:`SWIFFT_ConstMul`, :libswifft:`SWIFFT_Set`, :libswifft:`SWIFFT_Add`, :libswifft:`SWIFFT_Sub`, :libswifft:`SWIFFT_Mul` provide vectorized and homomorphic operations on an output block, while :libswifft:`SWIFFT_ConstSetMultiple`, :libswifft:`SWIFFT_ConstAddMultiple`, :libswifft:`SWIFFT_ConstSubMultiple`, :libswifft:`SWIFFT_ConstMulMultiple`, :libswifft:`SWIFFT_SetMultiple`, :libswifft:`SWIFFT_AddMultiple`, :libswifft:`SWIFFT_SubMultiple`, :libswifft:`SWIFFT_Mul` provide corresponding operations to multiple blocks.
+
 
 Typical code using the C++ API:
 
@@ -143,5 +158,5 @@ Typical code using the C++ API:
     SWIFFT_Compute(input.data, sign.data, output.data); /* compute the hash of the signed input into the output */
     SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
 
-Assignment and equality operators are available for `Swifft{Input,Output,Compact}` instances. Arithemtic and arithmetic-assignment operators, corresponding to the arithmetic functions in the C API, are available for `SwifftOutput` instances.
+Assignment and equality operators are available for :libswifft:`SwifftInput`, :libswifft:`SwifftOutput`, :libswifft:`SwifftCompact` instances. Arithemtic and arithmetic-assignment operators, corresponding to the arithmetic functions in the C API, are available for :libswifft:`SwifftOutput` instances.
 

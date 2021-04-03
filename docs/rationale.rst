@@ -24,7 +24,14 @@ An invocation of the tests-executable of LibSWIFFT running single-threaded using
     Filters: swifft takes at most 2000 cycles per call
     running 1*10000000 rounds: cycles/rounds=1097.94 cycles/byte=4.28882 Giga-cycles/sec=2.30399 MB/sec=512.322 cycles/rdtsc=16
 
-demonstrates that LibSWIFFT is quite fast on short inputs (here, 256 bytes), often used in practical zero-knowledge proofs and post-quantum digital signatures. This is more than an order of magnitude faster than the `originally reported <https://www.alonrosen.net/PAPERS/lattices/swifft.pdf>`_ 40MB/sec on a 3.2 GHz Intel Pentium 4. It also compares well with modern hash functions:
+demonstrates that LibSWIFFT is quite fast on short inputs (here, 256 bytes), often used in practical zero-knowledge proofs and post-quantum digital signatures. This is more than an order of magnitude faster than the `originally reported <https://www.alonrosen.net/PAPERS/lattices/swifft.pdf>`_ 40MB/sec on a 3.2 GHz Intel Pentium 4. This is also faster than `K2SN-MSS's binary 16-bit SWIFFT function implementation <https://github.com/gvilitechltd/K2SN-MSS/tree/swifftperf>`_ (for an input of 128 bytes), which is the fastest one in the K2SN-MSS implementation, for the same executaion settings, i.e. running single-threaded using AVX2 on an Intel Skylake microarchitecture (Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz):
+
+.. code-block:: sh
+
+    $ ./tester
+    1000000 SWIFFT16 rounds: cycles/round=737.363098 cycles/byte=5.760649
+
+It also compares well with modern hash functions:
 
 - `Blake3 <https://github.com/BLAKE3-team/BLAKE3>`_ - cryptographic hash function achieving about `3-to-4 cycles/byte using AVX512 on short inputs <https://github.com/BLAKE3-team/BLAKE3-specs/blob/master/blake3.pdf>`_ and are non-homomorphic nor facilitating proofs of knowledge of a preimage.
 - `Seahash <https://docs.rs/seahash/4.0.1/seahash/index.html>`_ - a hash function achieving ~0.24 cycles/byte but is non-cryptographic.
