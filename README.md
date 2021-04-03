@@ -7,6 +7,7 @@
 - [![Documentation Status](https://readthedocs.org/projects/libswifft/badge/?version=latest)](http://libswifft.readthedocs.io/en/latest/)
 - [![Packaging Status](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/badge.svg?branch=main)](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/)
 - **Quick start on Linux**: Ensure `docker` is installed and runnable, clone this repository and go to its root directory, and run the command `docker build . && docker run --rm -it $(docker build -q .)` to build and test LibSWIFFT.
+- **Quick performance comparison on Linux**: Ensure `docker` is installed and runnable, clone this repository and go to its root directory, and run the command `docker build . -f Dockerfile.compare-to-K2SN-MSS && docker run --rm -it $(docker build -q . -f Dockerfile.compare-to-K2SN-MSS)` to build and compare performance with K2SN-MSS.
 
 ## Introducing LibSWIFFT
 
