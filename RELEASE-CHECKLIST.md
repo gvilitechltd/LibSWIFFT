@@ -41,9 +41,16 @@ Coverage tests are executed using a debug build:
 
 This procedure is specific to GCC builds and does not cover performance testing code.
 
-## Running doxygen
+## Generating Documentation
 
 To generate documentation:
+
+- Ensure `sphinx` documentation generator is installed and working
+- Ensure `doxygen` is installed and working
+- Go to the `docs` directory
+- Run `make html`
+
+The doxygen configuration was set up using these steps:
 
 - Run `doxygen -g doxygen.conf`
 - Edit `doxygen.conf`:
@@ -52,4 +59,5 @@ To generate documentation:
   - Set `RECURSIVE` to `YES`.
   - Set `EXTRACT_ALL` to `YES`
   - Set `EXCLUDE` to `build`
-- Run `doxygen doxygen.conf`
+
+The doxygen generation can be ran using `doxygen doxygen.conf`.

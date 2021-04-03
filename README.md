@@ -3,6 +3,7 @@
 # LibSWIFFT - A fast C/C++ library for the SWIFFT secure homomorphic hash function
 
 - [Official Repository](https://github.com/gvilitechltd/LibSWIFFT)
+- [Documentation](http://libswifft.readthedocs.io/en/latest/)
 - [![Documentation Status](https://readthedocs.org/projects/libswifft/badge/?version=latest)](http://libswifft.readthedocs.io/en/latest/)
 - [![Packaging Status](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/badge.svg?branch=main)](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/)
 - **Quick start on Linux**: Ensure `docker` is installed and runnable, clone this repository and go to its root directory, and run the command `docker build . && docker run --rm -it $(docker build -q .)` to build and test LibSWIFFT.
@@ -15,7 +16,7 @@ LibSWIFFT is a production-ready C/C++ library providing SWIFFT, one of the faste
 
 **Why another implementation of SWIFFT?** LibSWIFFT is a reliable building block for fast and scalable cryptographic protocols. It is simple to use and maintain, has clean APIs, is well documented and tested, and is at least as fast as other implementations of SWIFFT and often faster. Other implementations of SWIFFT are:
 
-- The [8-bit](https://github.com/anon1985/Swifft-avx2-8) and [16-bit](https://github.com/anon1985/K2SN-MSS/swifft16) AVX2 implementations for [K2SN-MSS](https://eprint.iacr.org/2019/442.pdf). Both are arguably not as easy to use nor as well documented and tested as LibSWIFFT. The former is slower and uses less memory while the latter is about as fast as LibSWIFFT for AVX2 yet does not support AVX512.
+- The [8-bit](https://github.com/anon1985/Swifft-avx2-8) and [16-bit](https://github.com/anon1985/K2SN-MSS/tree/master/swifft16) AVX2 implementations for [K2SN-MSS](https://eprint.iacr.org/2019/442.pdf). Both are arguably not as easy to use nor as well documented and tested as LibSWIFFT. The former is slower and uses less memory while the latter is about as fast as LibSWIFFT for AVX2 yet does not support AVX512.
 - [The original implementation](https://github.com/micciancio/SWIFFT) written in 2007. It is minimal non-production code. [The AVX2 implementation for K2SN-MSS](https://eprint.iacr.org/2019/442.pdf) is reported to be 25% faster.
 
 An invocation of the tests-executable of LibSWIFFT running single-threaded using AVX2 on an Intel Skylake microarchitecture (Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz):
@@ -24,7 +25,12 @@ An invocation of the tests-executable of LibSWIFFT running single-threaded using
     Filters: swifft takes at most 2000 cycles per call
     running 1*10000000 rounds: cycles/rounds=1097.94 cycles/byte=4.28882 Giga-cycles/sec=2.30399 MB/sec=512.322 cycles/rdtsc=16
 
-demonstrates that LibSWIFFT is quite fast on short inputs (here, 256 bytes), often used in practical zero-knowledge proofs and post-quantum digital signatures. This is more than an order of magnitude faster than the [originally reported](https://www.alonrosen.net/PAPERS/lattices/swifft.pdf) 40MB/sec on a 3.2 GHz Intel Pentium 4. It also compares well with modern hash functions:
+demonstrates that LibSWIFFT is quite fast on short inputs (here, 256 bytes), often used in practical zero-knowledge proofs and post-quantum digital signatures. This is more than an order of magnitude faster than the [originally reported](https://www.alonrosen.net/PAPERS/lattices/swifft.pdf) 40MB/sec on a 3.2 GHz Intel Pentium 4. This is also faster than [K2SN-MSS's binary 16-bit SWIFFT function implementation](https://github.com/gvilitechltd/K2SN-MSS/tree/swifftperf) (for an input of 128 bytes), which is the fastest one in the K2SN-MSS implementation, for the same executaion settings, i.e. running single-threaded using AVX2 on an Intel Skylake microarchitecture (Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz):
+
+    $ ./tester
+    1000000 SWIFFT16 rounds: cycles/round=737.363098 cycles/byte=5.760649
+
+It also compares well with modern hash functions:
 
 - [Blake3](https://github.com/BLAKE3-team/BLAKE3) - cryptographic hash function achieving about [3-to-4 cycles/byte using AVX512 on short inputs](https://github.com/BLAKE3-team/BLAKE3-specs/blob/master/blake3.pdf) and are non-homomorphic nor facilitating proofs of knowledge of a preimage.
 - [Seahash](https://docs.rs/seahash/4.0.1/seahash/index.html) - a hash function achieving ~0.24 cycles/byte but is non-cryptographic.
@@ -56,7 +62,7 @@ LibSWIFFT was implemented with reference to the [SWIFFTX submission to NIST](htt
 6. Support for newer CPU instruction sets: AVX, AVX2, and AVX512.
 7. Over 30 test-cases providing excellent coverage of the APIs and the mathematical properties of SWIFFT.
 
-Formally, LibSWIFFT provides a single hash function that maps from an input domain `Z_2^{2048}` (taking 256B) to an output domain `Z_{257}^{64}` (taking 128B, at 2B per element) and then to a compact domain `Z_{256}^{65}` (taking 65B). The computation of the first map is done over `Z_{257}`. The homomorphism property applies to the input and output domains, but not to the compact domain, and is revealed when the binary-valued input domain is naturally embedded in `Z_{257}^{2048}`. Generally, it is computationally hard to find a binary-valued pre-image given an output computed as the sum of `N` outputs corresponding to known binary-valued pre-images. On the other hand, it is easy to find a small-valued pre-image (over `Z_{257}^{2048}`) when `N` is small, since it is simply the sum of the known pre-images due to the homomorphism property.
+Formally, LibSWIFFT provides a single hash function that maps from an input domain `Z_2^{2048}` (taking 256B) to an output domain `Z_{257}^{64}` (taking 128B, at 2B per element) and then to a compact domain `Z_{256}^{64}` (taking 64B). The computation of the first map is done over `Z_{257}`. The homomorphism property applies to the input and output domains, but not to the compact domain, and is revealed when the binary-valued input domain is naturally embedded in `Z_{257}^{2048}`. Generally, it is computationally hard to find a binary-valued pre-image given an output computed as the sum of `N` outputs corresponding to known binary-valued pre-images. On the other hand, it is easy to find a small-valued pre-image (over `Z_{257}^{2048}`) when `N` is small, since it is simply the sum of the known pre-images due to the homomorphism property.
 
 ## Using LibSWIFFT
 
@@ -73,7 +79,21 @@ The version of LibSWIFFT is provided by the API in `include/libswifft/swifft_ver
 
 The main LibSWIFFT C++ API is documented in `include/libswifft/swifft.hpp`.
 
-Refer to the [release checklist document](RELEASE-CHECKLIST.md) for how to generate the documentation for the APIs using doxygen.
+Please refer to:
+- the [release checklist document](RELEASE-CHECKLIST.md) for how to generate the documentation for the APIs using doxygen.
+- the [code design document](CODE-DESIGN.md) for details on the architecture and design of the LibSWIFFT code.
+- the [documentation](http://libswifft.readthedocs.io/en/latest/) for the complete details.
+
+An extended use of the LibSWIFFT API follows the following steps:
+
+- **Allocate buffers**: LibSWIFFT defines 3 types of buffers - input, output and compact. The input buffer `BitSequence input[SWIFFT_INPUT_BLOCK_SIZE]` holds a vector in `Z_2^{2048}` where each element takes 1 bit, the output buffer `BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE]` holds a vector in `Z_{257}^{64}` where each element takes 16 bits, and the compact buffer `BitSequence compact[SWIFFT_COMPACT_BLOCK_SIZE]` holds a value in `Z_{256}^64` taking 64 bytes.
+- **Populate input buffers**: An input buffer is populated in preparation for hashing. This is normally done by directly setting the bits in the input buffer. Each bit corresponds to an element of the vector with a value in `{0,1}`.
+- **Populate sign buffers**: A sign buffer is an input buffer whose bits are interpreted as sign bits. A 0-valued (resp. 1-valued) bit corresponds to a positive (resp. negative) sign. When an input buffer and a sign buffer are taken together, they define a vector in `{-1,0,1}^{2048}`.
+- **Compute output buffers**: The hash of an input buffer, with or without a sign buffer, is computed into an output buffer. This is normally done using `SWIFFT_Compute` or `SWIFFT_ComputeSigned`.
+- **Perform arithmetic operations with output buffers**: LibSWIFFT provides several arithemtic (homomorphic) operations involving output buffers whose result is put into an output buffer. The vectors of output buffers may be added, subtracted, or multiplied element-wise. See below for more details.
+- **Compact the output buffer**: The hash in the output buffer is compacted into the compact buffer. This is an optional operation, in that the hash in the output buffer may be sufficient for certain applications.
+
+A more restricted use of the LibSWIFFT API involves only the steps of allocating buffers, populating input buffers, and computing output buffers. 
 
 Typical code using the C API:
 
@@ -92,7 +112,7 @@ SWIFFT_Compute(input, sign, output); /* compute the hash of the signed input int
 SWIFFT_Compact(output, compact); /* optionally, compact the hash */
 ```
 
-Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions `SWIFFT_{Compute,Compact}Multiple{,Signed}*` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block, while `SWIFFT_{Const,}{Set,Add,sub,Mul}Multiple*` provide corresponding operations to multiple blocks.
+Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions `SWIFFT_ComputeMultiple{,Signed}*` and `SWIFFT_CompactMultiple` apply operations to multiple blocks. The arithmetic functions `SWIFFT_{Const,}{Set,Add,Sub,Mul}*` provide vectorized and homomorphic operations on an output block, while `SWIFFT_{Const,}{Set,Add,sub,Mul}Multiple*` provide corresponding operations to multiple blocks.
 
 Typical code using the C++ API:
 

@@ -31,15 +31,26 @@ Fast
 ----
 
 LibSWIFFT is fast. Here is the output from a test-case of LibSwifft v1.0.0 that
-demonstrates hashing running at a rate of less than 5 cycles-per-byte
-single-threaded using AVX2 on an Intel Skylake microarchitecture (Intel(R)
-Core(TM) i7-10875H CPU @ 2.30GHz):
+demonstrates hashing (for an input of 256 bytes) running at a rate of less than
+5 cycles-per-byte single-threaded using AVX2 on an Intel Skylake
+microarchitecture (Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz):
 
 .. code-block:: sh
 
     $ ./test/swifft_catch "swifft takes at most 2000 cycles per call"
     Filters: swifft takes at most 2000 cycles per call
     running 1*10000000 rounds: cycles/rounds=1097.94 cycles/byte=4.28882 Giga-cycles/sec=2.30399 MB/sec=512.322 cycles/rdtsc=16
+
+This is faster than the rate of the recent
+`K2SN-MSS's binary 16-bit SWIFFT function implementation <https://github.com/gvilitechltd/K2SN-MSS/tree/swifftperf>`_
+(for an input of 128 bytes) on the same execution settings, i.e. single-threaded
+using AVX2 on an Intel Skylake microarchitecture (Intel(R) Core(TM) i7-10875H
+CPU @ 2.30GHz):
+
+.. code-block:: sh
+
+   $ ./tester
+    1000000 SWIFFT16 rounds: cycles/round=737.363098 cycles/byte=5.760649
 
 LibSWIFFT supports microarchitectures with AVX, AVX2, and AVX512 instruction
 sets to take advantage of available hardware acceleration.
@@ -93,7 +104,6 @@ of buffers passed to LibSWIFFT functions. The equivalent code using the
     SwifftOutput output;
     /* after input is populated (not shown here), it is time to compute the hash: */
     SWIFFT_Compute(input.data, output.data); /* compute the hash of the input into the output */
-    SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
 
 :libswifft:`SwifftInput` and :libswifft:`SwifftOutput` are auto-memory-aligned.
 
@@ -168,6 +178,7 @@ The Community Guide explains how to participate in LibSWIFFT's community.
    :maxdepth: 2
 
    community-guide
+   code-design
 
 API Guide
 =========
