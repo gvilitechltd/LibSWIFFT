@@ -19,9 +19,9 @@ bibliography: paper.bib
 
 # Summary
 
-LibSWIFFT is an open-source production-ready C/C++ library providing SWIFFT, one
-of the fastest available secure hash functions that is also collision-resistant
-as well as facilitates post-quantum digital signature schemes and zero-knowledge
+LibSWIFFT is an open-source, production-ready C/C++ library providing SWIFFT, one
+of the fastest available secure hash functions that is also collision-resistant.
+SWIFFT also facilitates post-quantum digital signature schemes and zero-knowledge
 proofs of knowledge of a preimage (ZKPoKP). LibSWIFFT is optimized for short
 blocks of input and runs at a rate of less than 5 cycles/byte single-threaded on
 a modern commodity computer with AVX2. Other software providing SWIFFT, which
@@ -31,7 +31,7 @@ implementation by the authors of SWIFFT [@swifftgit] and the SWIFFT 8-bit
 multi-signature scheme K2SN-MSS [@cryptoeprint:2019:442].
 
 LibSWIFFT is currently intended to be used by cryptography researchers and
-developers. It provides clean easy-to-use C/C++ APIs with high-performance
+developers. It provides clean, easy-to-use C/C++ APIs with high-performance
 implementations and is well-tested and well-documented. Other available
 implementations of the SWIFFT function do not provide all these benefits. For
 further details, the reader is referred to the official LibSWIFFT repository
