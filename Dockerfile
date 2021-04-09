@@ -17,7 +17,7 @@ RUN wget https://github.com/catchorg/Catch2/archive/${CATCH2_VERSION}.zip -O Cat
 RUN (CATCH2_VER=$(echo ${CATCH2_VERSION} | sed 's~^v~~'); ln -s Catch2-${CATCH2_VER} Catch2 && cd Catch2 && cmake -Bbuild -H. -DBUILD_TESTING=OFF && MAKEFLAGS=$(( $(nproc) + 1 )) cmake --build build/ --target install)
 
 # get and build LibSWIFFT source code
-ARG LIBSWIFFT_VERSION=v1.1.0
+ARG LIBSWIFFT_VERSION=v1.1.1
 ARG LIBSWIFFT_MCFLAGS=-march=native
 RUN wget https://github.com/gvilitechltd/LibSWIFFT/archive/${LIBSWIFFT_VERSION}.zip -O LibSWIFFT.zip && unzip LibSWIFFT.zip -d .
 RUN (LIBSWIFFT_VER=$(echo ${LIBSWIFFT_VERSION} | sed 's~^v~~'); ln -s LibSWIFFT-${LIBSWIFFT_VER} LibSWIFFT && cd LibSWIFFT && cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Release -DSWIFFT_MACHINE_COMPILE_FLAGS=${LIBSWIFFT_MCFLAGS} && MAKEFLAGS=$(( $(nproc) + 1 )) cmake --build build/ --target all)
