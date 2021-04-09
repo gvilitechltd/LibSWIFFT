@@ -12,11 +12,11 @@ The code repository can be cloned using `git <https://git-scm.com>`_:
     git clone https://github.com/gvilitechltd/LibSWIFFT
     cd LibSWIFFT
 
-To switch to a specific version of LibSWIFFT, such as `v1.1.0`, use:
+To switch to a specific version of LibSWIFFT, such as `v1.1.1`, use:
 
 .. code-block:: sh
 
-    git checkout v1.1.0
+    git checkout v1.1.1
 
 As an alternative to getting the repository, a specific version of LibSWIFFT can
 be obtained from `GitHub <https://github.com/gvilitechltd/LibSWIFFT>`_ by
@@ -25,9 +25,9 @@ Then, unpack the archive and change into the unpacked directory, e.g.:
 
 .. code-block:: sh
 
-    wget https://github.com/gvilitechltd/LibSWIFFT/archive/v1.1.0.zip
-    unzip v1.1.0.zip
-    cd LibSWIFFT-1.1.0
+    wget https://github.com/gvilitechltd/LibSWIFFT/archive/v1.1.1.zip
+    unzip v1.1.1.zip
+    cd LibSWIFFT-1.1.1
 
 Building LibSWIFFT
 ------------------

@@ -58,7 +58,7 @@ sets to take advantage of available hardware acceleration.
 Production-Ready
 ----------------
 
-LibSWIFFT v1.1.0 ships with over 30 test-cases including millions of checks that
+LibSWIFFT v1.1.1 ships with over 30 test-cases including millions of checks that
 provide excellent coverage of the library's code and the mathematical properties
 of the SWIFFT function it implements:
 
