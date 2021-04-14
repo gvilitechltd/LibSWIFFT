@@ -38,6 +38,7 @@ LibSWIFFT has the following file and directory structure:
 |  - `swifft_impl.inl`           | LibSWIFFT internal C definitions                      |
 |  - `swifft_keygen.cpp`         | LibSWIFFT internal C code generation                  |
 |  - `swifft_ops.inl`            | LibSWIFFT internal C code expansion                   |
+|  - `transpose_8x8_16_sse2.inl` | LibSWIFFT internal C code for matrix transposing      |
 
 ## Main API
 

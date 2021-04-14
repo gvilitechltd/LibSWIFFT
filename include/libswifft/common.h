@@ -26,6 +26,12 @@
 	#define LIBSWIFFT_END_EXTERN_C
 #endif
 
+#ifdef __cplusplus
+	#define LIBSWIFFT_STATIC_ASSERT(expr, iden) static_assert(expr, LIBSWIFFT_QUOTE(iden))
+#else
+	#define LIBSWIFFT_STATIC_ASSERT(expr, iden) typedef char LIBSWIFFT_CONCAT(libswifft_static_assert_, iden)[(expr) ? 1 : -1]
+#endif
+
 #define LIBSWIFFT_RESTRICT __restrict__
 
 #endif /* __LIBSWIFFT_COMMON_H__ */
