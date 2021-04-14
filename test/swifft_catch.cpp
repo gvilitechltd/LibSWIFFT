@@ -151,7 +151,7 @@ TEST_CASE( "swifft compact takes at most 150 cycles per call", "[.][swifftperf]"
 	randomize(&input, 1);
 	SWIFFT_Compute(input.data, output.data);
 	int nrepeats = 1, nrounds=100000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 100, "compact-rounds", [&output, &compact, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 150, "compact-rounds", [&output, &compact, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
 				SWIFFT_Compact(output.data, compact.data);
