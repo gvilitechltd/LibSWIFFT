@@ -143,6 +143,23 @@ TEST_CASE( "swifft takes at most 4000 cycles per block in-large-memory", "[.][sw
 	test_swifft_block_cycles(1000000, 1, 4000);
 }
 
+TEST_CASE( "swifft compact takes at most 150 cycles per call", "[.][swifftperf]" ) {
+	srand(1);
+	SwifftInput input = {0};
+	SwifftOutput output;
+	SwifftCompact compact;
+	randomize(&input, 1);
+	SWIFFT_Compute(input.data, output.data);
+	int nrepeats = 1, nrounds=100000;
+	test_swifft_iter_cycles(nrepeats, nrounds, 100, "compact-rounds", [&output, &compact, nrepeats, nrounds]() {
+		for (int r=0; r<nrepeats; r++) {
+			for (int64_t i=0; i<nrounds; i++) {
+				SWIFFT_Compact(output.data, compact.data);
+			}
+		}
+	});
+}
+
 TEST_CASE( "swifft FFT-only takes at most 1500 cycles per call", "[.][swifftperf]" ) {
 	srand(1);
 	SwifftInput input = {0};
