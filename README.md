@@ -3,6 +3,7 @@
 # LibSWIFFT - A fast C/C++ library for the SWIFFT secure homomorphic hash function
 
 - [Official Repository](https://github.com/gvilitechltd/LibSWIFFT)
+- [JOSS paper](https://doi.org/10.21105/joss.03040) [![DOI](https://joss.theoj.org/papers/10.21105/joss.03040/status.svg)](https://doi.org/10.21105/joss.03040)
 - [Documentation](http://libswifft.readthedocs.io/en/latest/)
 - [![Documentation Status](https://readthedocs.org/projects/libswifft/badge/?version=latest)](http://libswifft.readthedocs.io/en/latest/)
 - [![Packaging Status](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/badge.svg?branch=main)](https://github.com/gvilitechltd/libswifft/actions/workflows/new-code.yml/)
