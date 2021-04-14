@@ -23,47 +23,49 @@ LibSWIFFT has the following file and directory structure:
    :header-rows: 1
 
    * - File or Directory
-     - Description                                         
+     - Description
    * - include
-     - root directory of headers                           
+     - root directory of headers
    * - . libswifft
-     - directory of LibSWIFFT headers                      
+     - directory of LibSWIFFT headers
    * - . . :libswifft:`common.h`
-     - LibSWIFFT public C common definitions               
+     - LibSWIFFT public C common definitions
    * - . . :libswifft:`swifft.h`
-     - LibSWIFFT public C API                              
+     - LibSWIFFT public C API
    * - . . :libswifft:`swifft.hpp`
-     - LibSWIFFT public C++ API                            
+     - LibSWIFFT public C++ API
    * - . . :libswifft:`swifft_avx.h`
-     - LibSWIFFT public C API for AVX                      
+     - LibSWIFFT public C API for AVX
    * - . . :libswifft:`swifft_avx2.h`
-     - LibSWIFFT public C API for AVX2                     
+     - LibSWIFFT public C API for AVX2
    * - . . :libswifft:`swifft_avx512.h`
-     - LibSWIFFT public C API for AVX512                   
+     - LibSWIFFT public C API for AVX512
    * - . . :libswifft:`swifft_common.h`
-     - LibSWIFFT public C definitions                      
+     - LibSWIFFT public C definitions
    * - . . :libswifft:`swifft_iset.inl`
      - LibSWIFFT public C API expansion for instruction-sets
    * - . . :libswifft:`swifft_ver.h`
-     - LibSWIFFT public C API                              
+     - LibSWIFFT public C API
    * -  src
-     - directory of LibSWIFFT sources                      
+     - directory of LibSWIFFT sources
    * - . :libswifft:`swifft.c`
-     - LibSWIFFT public C implementation                   
+     - LibSWIFFT public C implementation
    * - . :libswifft:`swifft.inl`
-     - LibSWIFFT internal C code expansion                 
+     - LibSWIFFT internal C code expansion
    * - . :libswifft:`swifft_avx.c`
-     - LibSWIFFT public C implementation for AVX           
+     - LibSWIFFT public C implementation for AVX
    * - . :libswifft:`swifft_avx2.c`
-     - LibSWIFFT public C implementation for AVX2          
+     - LibSWIFFT public C implementation for AVX2
    * - . :libswifft:`swifft_avx512.c`
-     - LibSWIFFT public C implementation for AVX512        
+     - LibSWIFFT public C implementation for AVX512
    * - . :libswifft:`swifft_impl.inl`
-     - LibSWIFFT internal C definitions                    
+     - LibSWIFFT internal C definitions
    * - . :libswifft:`swifft_keygen.cpp`
-     - LibSWIFFT internal C code generation                
+     - LibSWIFFT internal C code generation
    * - . :libswifft:`swifft_ops.inl`
-     - LibSWIFFT internal C code expansion                 
+     - LibSWIFFT internal C code expansion
+   * - . :libswifft:`transpose_8x8_16_sse2.inl`
+     - LibSWIFFT internal C code for matrix transposing
 
 Main API
 --------
@@ -83,7 +85,7 @@ The main C API has the following organization:
   subtract, or multiply given two output forms or one output form and a constant
   value.
 - **Functions for multiple blocks**: These are functions with `Multiple` as part
-  of their name. They operate on a number of blocks given as a parameter, rather 
+  of their name. They operate on a number of blocks given as a parameter, rather
   than one block like the corresponding (i.e., without `Multiple`) single-block
   functions.
 
