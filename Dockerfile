@@ -20,7 +20,9 @@ RUN (CATCH2_VER=$(echo ${CATCH2_VERSION} | sed 's~^v~~'); ln -s Catch2-${CATCH2_
 ARG LIBSWIFFT_VERSION=v1.1.1
 ARG LIBSWIFFT_MCFLAGS=-march=native
 RUN wget https://github.com/gvilitechltd/LibSWIFFT/archive/${LIBSWIFFT_VERSION}.zip -O LibSWIFFT.zip && unzip LibSWIFFT.zip -d .
-RUN (LIBSWIFFT_VER=$(echo ${LIBSWIFFT_VERSION} | sed 's~^v~~'); ln -s LibSWIFFT-${LIBSWIFFT_VER} LibSWIFFT && cd LibSWIFFT && cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Release -DSWIFFT_MACHINE_COMPILE_FLAGS=${LIBSWIFFT_MCFLAGS} && MAKEFLAGS=$(( $(nproc) + 1 )) cmake --build build/ --target all)
+RUN (LIBSWIFFT_VER=$(echo ${LIBSWIFFT_VERSION} | sed 's~^v~~'); ln -s LibSWIFFT-${LIBSWIFFT_VER} LibSWIFFT)
+RUN (cd LibSWIFFT && cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Release -DSWIFFT_MACHINE_COMPILE_FLAGS=${LIBSWIFFT_MCFLAGS} && MAKEFLAGS=-j$(( $(nproc) - 1 )) cmake --build build/ --target all)
+RUN (cd LibSWIFFT && cmake -Bbuild-omp -H. -DCMAKE_BUILD_TYPE=Release -DSWIFFT_MACHINE_COMPILE_FLAGS=${LIBSWIFFT_MCFLAGS} -DSWIFFT_ENABLE_OPENMP=On && MAKEFLAGS=-j$(( $(nproc) - 1 )) cmake --build build-omp/ --target all)
 
 # provide tester as entry point
 ENTRYPOINT ["LibSWIFFT/build/test/swifft_catch"]
