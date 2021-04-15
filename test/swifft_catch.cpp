@@ -143,35 +143,52 @@ TEST_CASE( "swifft takes at most 4000 cycles per block in-large-memory", "[.][sw
 	test_swifft_block_cycles(1000000, 1, 4000);
 }
 
-TEST_CASE( "swifft FFT-only takes at most 2000 cycles per call", "[.][swifftperf]" ) {
+TEST_CASE( "swifft compact takes at most 150 cycles per call", "[.][swifftperf]" ) {
 	srand(1);
 	SwifftInput input = {0};
-	SwifftInput sign = {0};
-        SWIFFT_ALIGN int16_t fftout[SWIFFT_N*SWIFFT_M];
+	SwifftOutput output;
+	SwifftCompact compact;
 	randomize(&input, 1);
+	SWIFFT_Compute(input.data, output.data);
 	int nrepeats = 1, nrounds=100000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 2000, "FFT rounds", [&input, &sign, &fftout, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 150, "compact-rounds", [&output, &compact, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
-				SWIFFT_ISET_NAME(SWIFFT_fft_)(input.data, sign.data, SWIFFT_M, fftout);
+				SWIFFT_Compact(output.data, compact.data);
 			}
 		}
 	});
 }
 
-TEST_CASE( "swifft FFT-sum-only takes at most 2000 cycles per call", "[.][swifftperf]" ) {
+TEST_CASE( "swifft FFT-only takes at most 1500 cycles per call", "[.][swifftperf]" ) {
 	srand(1);
 	SwifftInput input = {0};
 	SwifftInput sign = {0};
-        SWIFFT_ALIGN int16_t fftout[SWIFFT_N*SWIFFT_M];
-	SwifftOutput output = {0};
+	SWIFFT_ALIGN int16_t fftout[SWIFFT_N*SWIFFT_M];
 	randomize(&input, 1);
-	SWIFFT_ISET_NAME(SWIFFT_fft_)(input.data, sign.data, SWIFFT_M, fftout);
 	int nrepeats = 1, nrounds=100000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 2000, "FFT-sum rounds", [&fftout, &output, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 1500, "FFT-rounds", [&input, &sign, &fftout, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
-				SWIFFT_ISET_NAME(SWIFFT_fftsum_)(SWIFFT_PI_key, fftout, SWIFFT_M, (int16_t *)output.data);
+				SWIFFT_fft(input.data, sign.data, SWIFFT_M, fftout);
+			}
+		}
+	});
+}
+
+TEST_CASE( "swifft FFT-sum-only takes at most 500 cycles per call", "[.][swifftperf]" ) {
+	srand(1);
+	SwifftInput input = {0};
+	SwifftInput sign = {0};
+	SWIFFT_ALIGN int16_t fftout[SWIFFT_N*SWIFFT_M];
+	SwifftOutput output = {0};
+	randomize(&input, 1);
+	SWIFFT_fft(input.data, sign.data, SWIFFT_M, fftout);
+	int nrepeats = 1, nrounds=100000;
+	test_swifft_iter_cycles(nrepeats, nrounds, 500, "FFT-sum-rounds", [&fftout, &output, nrepeats, nrounds]() {
+		for (int r=0; r<nrepeats; r++) {
+			for (int64_t i=0; i<nrounds; i++) {
+				SWIFFT_fftsum(SWIFFT_PI_key, fftout, SWIFFT_M, (int16_t *)output.data);
 			}
 		}
 	});

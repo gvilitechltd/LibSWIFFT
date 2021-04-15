@@ -8,6 +8,11 @@
 
 .. image:: ../assets/LibSWIFFT-logo.png
 
+`LibSWIFFT v1.1.1 <https://doi.org/10.21105/joss.03040>`_ |josspaper|
+
+.. |josspaper| image:: https://joss.theoj.org/papers/10.21105/joss.03040/status.svg
+   :target: https://doi.org/10.21105/joss.03040
+
 LibSWIFFT: Fast Secure Homomorphic Hashing
 ==========================================
 

@@ -36,24 +36,36 @@ void SWIFFT_fftsum(const int16_t * LIBSWIFFT_RESTRICT ikey,
 
 //! \brief Converts from base-257 to base-256.
 //!
-//! vals array is assumed to have (SWIFFT_W=8) SWIFFT_N=8 digits in base 257.
+//! vals array is assumed to have n digits in base 257.
 //! Assume that most significiant is last.
-//! output in vals is the same 8 numbers encoded in base 256.
+//! output in vals is the same n numbers encoded in base 256.
 //!
 //! \param[in,out] vals the vals array.
-static void ToBase256(Z1vec vals[8])
+//! \param[in] n the length of the vals array.
+static void ToBase256(Z1vec * vals, int n)
 {
 	Z1vec Z1_255 = Z1CONST(255), Z1_8 = Z1CONST(8);
 	int i;
-	for (i=8-1; i>0; i--){
+	for (i=n-1; i>0; i--) {
 		int j;
-		for (j=i-1; j<8-1; j++) {
-			Z1vec v = vals[j]+vals[j+1];
+		for (j=i-1; j<n-1; j++) {
+			Z1vec v = vals[j] + vals[j+1];
 			vals[j] = v & Z1_255;
 			vals[j+1] += (v >> Z1_8);
 		}
 	}
 }
+
+LIBSWIFFT_STATIC_ASSERT(8 * SWIFFT_W == SWIFFT_N, SWIFFT_N_must_be_8_times_SWIFFT_W);
+#define SWIFFT_OUTPUT_Z1_SIZE (SWIFFT_N / SWIFFT_W)
+#define SWIFFT_COMPACT_TRANSPOSE_SIZE 8
+
+#ifdef __SSE2__
+	#include <string.h>
+	#include "transpose_8x8_16_sse2.inl"
+	LIBSWIFFT_STATIC_ASSERT(sizeof(Z1vec) == sizeof(__m128i), Z1vec_and___m128i_must_have_the_same_size);
+	LIBSWIFFT_STATIC_ASSERT(sizeof(BitSequence)*SWIFFT_OUTPUT_BLOCK_SIZE == sizeof(Z1vec)*SWIFFT_OUTPUT_Z1_SIZE, output_and_transposed_arrays_must_have_the_same_size);
+#endif
 
 //! \brief Compacts a hash value of SWIFFT.
 //! The result is not composable with other compacted hash values.
@@ -70,11 +82,35 @@ void SWIFFT_Compact(const BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 	// but then a transpose like operation would have to be performed
 	// by the normal (Non-SIMD) version.
 	//
-	Z1vec transposed[SWIFFT_N/SWIFFT_W];
+#ifdef __SSE2__
+	__m128i transposed[SWIFFT_OUTPUT_Z1_SIZE];
+	memcpy(transposed, output, sizeof(BitSequence)*SWIFFT_OUTPUT_BLOCK_SIZE);
+	transpose_8x8_16_sse2(transposed);
+	ToBase256((Z1vec *) transposed, SWIFFT_OUTPUT_Z1_SIZE);
+	int16_t * tin = ((int16_t *) transposed) + ((SWIFFT_COMPACT_TRANSPOSE_SIZE - 1) * SWIFFT_COMPACT_TRANSPOSE_SIZE);
+	int carry = 0;
+	int i;
+	for (i=0; i<SWIFFT_OUTPUT_Z1_SIZE; i++,tin++) {
+		// move out carry bit to avoid saturation
+		carry |= ((*tin>>8)<<i);
+		*tin &= 255;
+	}
+	transpose_8x8_16_sse2(transposed);
+	__m128i * ztin = transposed;
+	__m128i * cout = (__m128i *) compact;
+	for (i=0; i<SWIFFT_OUTPUT_Z1_SIZE/2; i++) {
+		__m128i a = *ztin++;
+		__m128i b = *ztin++;
+		// compact 16-bit elements to 8-bit ones: saturation is avoided
+		*cout++ = _mm_packus_epi16(a, b);
+	}
+	// ignore carry
+#else
+	Z1vec transposed[SWIFFT_OUTPUT_Z1_SIZE];
 	int16_t *tin = (int16_t *) output;
 	int16_t *tout = (int16_t *) transposed;
 	int i;
-	for (i=0; i<SWIFFT_N/SWIFFT_W; i++,tin+=8,tout++) {
+	for (i=0; i<SWIFFT_OUTPUT_Z1_SIZE; i++,tin+=SWIFFT_COMPACT_TRANSPOSE_SIZE,tout++) {
 		tout[0] = tin[0];
 		tout[8] = tin[1];
 		tout[16] = tin[2];
@@ -84,11 +120,11 @@ void SWIFFT_Compact(const BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 		tout[48] = tin[6];
 		tout[56] = tin[7];
 	}
-	ToBase256(transposed);
+	ToBase256(transposed, SWIFFT_OUTPUT_Z1_SIZE);
 	tin = (int16_t *) transposed;
 	BitSequence *cout = compact;
 	int carry = 0;
-	for (i=0; i<SWIFFT_N/SWIFFT_W; i++,tin++,cout+=8) {
+	for (i=0; i<SWIFFT_OUTPUT_Z1_SIZE; i++,tin++,cout+=8) {
 		cout[0] = tin[0];
 		cout[1] = tin[8];
 		cout[2] = tin[16];
@@ -100,6 +136,7 @@ void SWIFFT_Compact(const BitSequence output[SWIFFT_OUTPUT_BLOCK_SIZE],
 		carry |= ((tin[56]>>8)<<i);
 	}
 	// ignore carry
+#endif
 }
 
 //! \brief Sets a constant value at each SWIFFT hash value element.
