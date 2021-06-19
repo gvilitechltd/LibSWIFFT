@@ -25,6 +25,8 @@
 #define SWIFFT_ISET() SWIFFT_INSTRUCTION_SET
 #include "swifft_ops.inl"
 
+#include "libswifft/swifft_object.h"
+
 namespace LibSwifft {
 
 static uint64_t rdtsc_cycles() {
@@ -38,8 +40,9 @@ static uint64_t rdtsc_cycles() {
 	return cycles / n;
 }
 
-TEST_CASE( "rdtsc", "[swifft]" ) {
-	rdtsc_cycles();
+TEST_CASE( "rdtsc takes at most 200 cycles on average", "[swifft]" ) {
+	uint64_t cycles = rdtsc_cycles();
+	REQUIRE( cycles <= 200 );
 }
 
 TEST_CASE( "swifft block sizes are sane", "[swifft]" ) {
@@ -84,15 +87,17 @@ static void test_swifft_iter_cycles(int nrepeats, int niters, double cycles_per_
 }
 
 TEST_CASE( "swifft takes at most 2000 cycles per call", "[.][swifftperf]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input = {0};
 	SwifftOutput output = {0};
 	randomize(&input, 1);
 	int nrepeats = 1, nrounds = 10000000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 2000, "rounds", [&input, &output, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 2000, "rounds", [&swifft, &input, &output, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
-				SWIFFT_Compute(input.data, output.data);
+				swifft.hash.SWIFFT_Compute(input.data, output.data);
 			}
 		}
 	});
@@ -118,13 +123,15 @@ struct Array
 	#define LABEL_OPENMP ""
 #endif
 void test_swifft_block_cycles(int nblocks, int nrepeats, double cycles_per_block_limit) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	Array<SwifftInput> input(nblocks);
 	Array<SwifftOutput> output(nblocks);
 	randomize(input.array, nblocks);
-	test_swifft_iter_cycles(nrepeats, nblocks, cycles_per_block_limit, "blocks" LABEL_OPENMP, [&input, &output, nblocks, nrepeats]() {
+	test_swifft_iter_cycles(nrepeats, nblocks, cycles_per_block_limit, "blocks" LABEL_OPENMP, [&swifft, &input, &output, nblocks, nrepeats]() {
 		for (int r=0; r<nrepeats; r++) {
-			SWIFFT_ComputeMultiple(nblocks, input.array[0].data, output.array[0].data);
+			swifft.hash.SWIFFT_ComputeMultiple(nblocks, input.array[0].data, output.array[0].data);
 		}
 	});
 }
@@ -144,6 +151,8 @@ TEST_CASE( "swifft takes at most 4000 cycles per block in-large-memory", "[.][sw
 }
 
 TEST_CASE( "swifft compact takes at most 150 cycles per call", "[.][swifftperf]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input = {0};
 	SwifftOutput output;
@@ -151,32 +160,36 @@ TEST_CASE( "swifft compact takes at most 150 cycles per call", "[.][swifftperf]"
 	randomize(&input, 1);
 	SWIFFT_Compute(input.data, output.data);
 	int nrepeats = 1, nrounds=100000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 150, "compact-rounds", [&output, &compact, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 150, "compact-rounds", [&swifft, &output, &compact, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
-				SWIFFT_Compact(output.data, compact.data);
+				swifft.hash.SWIFFT_Compact(output.data, compact.data);
 			}
 		}
 	});
 }
 
 TEST_CASE( "swifft FFT-only takes at most 1500 cycles per call", "[.][swifftperf]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input = {0};
 	SwifftInput sign = {0};
 	SWIFFT_ALIGN int16_t fftout[SWIFFT_N*SWIFFT_M];
 	randomize(&input, 1);
 	int nrepeats = 1, nrounds=100000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 1500, "FFT-rounds", [&input, &sign, &fftout, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 1500, "FFT-rounds", [&swifft, &input, &sign, &fftout, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
-				SWIFFT_fft(input.data, sign.data, SWIFFT_M, fftout);
+				swifft.fft.SWIFFT_fft(input.data, sign.data, SWIFFT_M, fftout);
 			}
 		}
 	});
 }
 
 TEST_CASE( "swifft FFT-sum-only takes at most 500 cycles per call", "[.][swifftperf]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input = {0};
 	SwifftInput sign = {0};
@@ -185,16 +198,18 @@ TEST_CASE( "swifft FFT-sum-only takes at most 500 cycles per call", "[.][swifftp
 	randomize(&input, 1);
 	SWIFFT_fft(input.data, sign.data, SWIFFT_M, fftout);
 	int nrepeats = 1, nrounds=100000;
-	test_swifft_iter_cycles(nrepeats, nrounds, 500, "FFT-sum-rounds", [&fftout, &output, nrepeats, nrounds]() {
+	test_swifft_iter_cycles(nrepeats, nrounds, 500, "FFT-sum-rounds", [&swifft, &fftout, &output, nrepeats, nrounds]() {
 		for (int r=0; r<nrepeats; r++) {
 			for (int64_t i=0; i<nrounds; i++) {
-				SWIFFT_fftsum(SWIFFT_PI_key, fftout, SWIFFT_M, (int16_t *)output.data);
+				swifft.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout, SWIFFT_M, (int16_t *)output.data);
 			}
 		}
 	});
 }
 
 TEST_CASE( "swifft speed is dependent on input size only", "[.][swifftperf]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input = {0};
 	SwifftOutput output = {0};
@@ -209,7 +224,7 @@ TEST_CASE( "swifft speed is dependent on input size only", "[.][swifftperf]" ) {
 			uint64_t sum_t = 0;
 			for (int k=0; k<n_calls; k++) {
 				uint64_t t0 = rdtsc_start();
-				SWIFFT_Compute(input.data, output.data);
+				swifft.hash.SWIFFT_Compute(input.data, output.data);
 				uint64_t t1 = rdtsc_stop();
 				sum_t += t1 - t0;
 			}
@@ -242,6 +257,8 @@ TEST_CASE( "SWIFFT_modP after 0|1|2 SWIFFT_qReduce invocations is consistent", "
 }
 
 TEST_CASE( "SWIFFT_fft is consistent across instruction-sets", "[swifft]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input = {0};
 	for (int j=0; j<SWIFFT_INPUT_BLOCK_SIZE; j++) {
@@ -249,27 +266,33 @@ TEST_CASE( "SWIFFT_fft is consistent across instruction-sets", "[swifft]" ) {
 	}
 	SwifftOutput output0 = {0};
 	SWIFFT_ALIGN int16_t fftout0[SWIFFT_N*SWIFFT_M] = {0};
-	SWIFFT_fft(input.data, SWIFFT_sign0, SWIFFT_M, fftout0);
-	SWIFFT_fftsum(SWIFFT_PI_key, fftout0, SWIFFT_M, (int16_t *)output0.data);
+	swifft.fft.SWIFFT_fft(input.data, SWIFFT_sign0, SWIFFT_M, fftout0);
+	swifft.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout0, SWIFFT_M, (int16_t *)output0.data);
 #if defined(__AVX__)
+	swifft_object_t swifft_avx;
+	SWIFFT_InitObject(&swifft_avx);
 	SwifftOutput output1 = {0};
 	SWIFFT_ALIGN int16_t fftout1[SWIFFT_N*SWIFFT_M] = {0};
-	SWIFFT_fft_AVX(input.data, SWIFFT_sign0, SWIFFT_M, fftout1);
-	SWIFFT_fftsum_AVX(SWIFFT_PI_key, fftout1, SWIFFT_M, (int16_t *)output1.data);
+	swifft_avx.fft.SWIFFT_fft(input.data, SWIFFT_sign0, SWIFFT_M, fftout1);
+	swifft_avx.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout1, SWIFFT_M, (int16_t *)output1.data);
 	CHECK( 0 == memcmp(fftout0, fftout1, sizeof(fftout1)) );
 #endif
 #if defined(__AVX2__)
+	swifft_object_t swifft_avx2;
+	SWIFFT_InitObject(&swifft_avx2);
 	SwifftOutput output2 = {0};
 	SWIFFT_ALIGN int16_t fftout2[SWIFFT_N*SWIFFT_M] = {0};
-	SWIFFT_fft_AVX2(input.data, SWIFFT_sign0, SWIFFT_M, fftout2);
-	SWIFFT_fftsum_AVX2(SWIFFT_PI_key, fftout2, SWIFFT_M, (int16_t *)output2.data);
+	swifft_avx2.fft.SWIFFT_fft(input.data, SWIFFT_sign0, SWIFFT_M, fftout2);
+	swifft_avx2.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout2, SWIFFT_M, (int16_t *)output2.data);
 	CHECK( 0 == memcmp(fftout0, fftout2, sizeof(fftout1)) );
 #endif
 #if defined(__AVX512F__)
+	swifft_object_t swifft_avx512;
+	SWIFFT_InitObject(&swifft_avx512);
 	SwifftOutput output3 = {0};
 	SWIFFT_ALIGN int16_t fftout3[SWIFFT_N*SWIFFT_M] = {0};
-	SWIFFT_fft_AVX512(input.data, SWIFFT_sign0, SWIFFT_M, fftout3);
-	SWIFFT_fftsum_AVX512(SWIFFT_PI_key, fftout3, SWIFFT_M, (int16_t *)output3.data);
+	swifft_avx512.fft.SWIFFT_fft(input.data, SWIFFT_sign0, SWIFFT_M, fftout3);
+	swifft.avx512.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout3, SWIFFT_M, (int16_t *)output3.data);
 	CHECK( 0 == memcmp(fftout0, fftout3, sizeof(fftout1)) );
 #endif
 }
@@ -304,6 +327,8 @@ TEST_CASE( "SWIFFT_safeMult is correct on the range [-128+1,128-1]*[-128,128]", 
 }
 
 TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	srand(1);
 	SwifftInput input[3] = {0}, sign[3] = {0}, zeroinput = {0};
 	SwifftOutput output[3] = {0}, zerooutput = {0};
@@ -313,16 +338,16 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 	}
 	// check input and its output are not zero
 	REQUIRE( input[0] != zeroinput );
-	SWIFFT_Compute(input[0].data, output[0].data);
+	swifft.hash.SWIFFT_Compute(input[0].data, output[0].data);
 	REQUIRE( output[0] != zerooutput );
 	// check positive sign gets the same output
-	SWIFFT_ComputeSigned(input[0].data, sign[1].data, output[1].data);
+	swifft.hash.SWIFFT_ComputeSigned(input[0].data, sign[1].data, output[1].data);
 	REQUIRE( output[0] == output[1] );
 	// check negative sign gets the mod-SWIFFT_P negative output
 	for (int j=0; j<SWIFFT_INPUT_BLOCK_SIZE; j++) {
 		sign[2].data[j] = 0xFF;
 	}
-	SWIFFT_ComputeSigned(input[0].data, sign[2].data, output[2].data);
+	swifft.hash.SWIFFT_ComputeSigned(input[0].data, sign[2].data, output[2].data);
 	REQUIRE( output[2] != zerooutput );
 	for (int j=0; j<SWIFFT_OUTPUT_BLOCK_SIZE/2; j++) {
 		int v0 = ((int16_t *)output[0].data)[j];
@@ -334,7 +359,7 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 		REQUIRE( summod == 0 );
 	}
 	// check that adding positive and negative gives zero
-	SWIFFT_Add(output[2].data, output[1].data);
+	swifft.arith.SWIFFT_Add(output[2].data, output[1].data);
 	REQUIRE( output[2] == zerooutput );
 	// check that negating a sign vector gives mod-SWIFFT_P negative output
 	for (int i=0; i<8; i++) {
@@ -343,12 +368,12 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 			sign[1].data[j] = j & ~(1 << i);
 			sign[2].data[j] = ~sign[1].data[j];
 		}
-		SWIFFT_ConstSet(output[0].data, 0);
+		swifft.arith.SWIFFT_ConstSet(output[0].data, 0);
 		for (int k=1; k<3; k++) {
 			CAPTURE( k );
-			SWIFFT_ComputeSigned(input[0].data, sign[k].data, output[k].data);
+			swifft.hash.SWIFFT_ComputeSigned(input[0].data, sign[k].data, output[k].data);
 			REQUIRE( output[k] != zerooutput );
-			SWIFFT_Add(output[0].data, output[k].data);
+			swifft.arith.SWIFFT_Add(output[0].data, output[k].data);
 		}
 		REQUIRE( output[0] == zerooutput );
 	}
@@ -412,11 +437,11 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 		for (int k=0; k<3; k++) {
 			REQUIRE( input[k] != zeroinput );
 			REQUIRE( sign[k] != zeroinput );
-			SWIFFT_ComputeSigned(input[k].data, sign[k].data, output[k].data);
+			swifft.hash.SWIFFT_ComputeSigned(input[k].data, sign[k].data, output[k].data);
 			REQUIRE( output[k] != zerooutput );
 		}
-		SWIFFT_Sub(output[0].data, output[1].data);
-		SWIFFT_Sub(output[0].data, output[2].data);
+		swifft.arith.SWIFFT_Sub(output[0].data, output[1].data);
+		swifft.arith.SWIFFT_Sub(output[0].data, output[2].data);
 		REQUIRE( output[0] == zerooutput );
 	}
 }
@@ -432,6 +457,8 @@ TEST_CASE( "swifft with sign is consistent", "[swifft]" ) {
 template <int n>
 void test_swifft_composes_bit_by_bit(const BitSequence (&select)[n])
 {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	REQUIRE( n > 0 );
 	const int m = n + 2;
 	SwifftInput input[m] = {0};
@@ -460,11 +487,11 @@ void test_swifft_composes_bit_by_bit(const BitSequence (&select)[n])
 	}
 	SwifftOutput output[m] = {0};
 	for (int j=0; j<m; j++) {
-		SWIFFT_Compute(input[j].data, output[j].data);
+		swifft.hash.SWIFFT_Compute(input[j].data, output[j].data);
 	}
 	SwifftOutput outputx = {0};
 	for (int j=1; j<m; j++) {
-		SWIFFT_Add(outputx.data, output[j].data);
+		swifft.arith.SWIFFT_Add(outputx.data, output[j].data);
 	}
 	if (output[0] != outputx) {
 		for (int i=0; i<m; i++) {
@@ -785,18 +812,20 @@ static const char * specific_compact1_string[] = {
 template<int n>
 bool test_swifft_composes_with_carry_bit_by_bit(SwifftInput (&input)[n])
 {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	REQUIRE( n == 5 );
 	SwifftOutput output[noutputs] = {0};
 	for (int j=0; j<ninputs; j++) {
-		SWIFFT_Compute(input[j].data, output[j].data);
+		swifft.hash.SWIFFT_Compute(input[j].data, output[j].data);
 	}
 	// add shares
 	for (int j=0; j<shares; j++) {
-		SWIFFT_Add(output[accum].data, output[given+1+j].data);
+		swifft.arith.SWIFFT_Add(output[accum].data, output[given+1+j].data);
 	}
 	// subtract carry twice
-	SWIFFT_Sub(output[accum].data, output[carry].data);
-	SWIFFT_Sub(output[accum].data, output[carry].data);
+	swifft.arith.SWIFFT_Sub(output[accum].data, output[carry].data);
+	swifft.arith.SWIFFT_Sub(output[accum].data, output[carry].data);
 	// validate
 	bool valid = output[given] == output[accum];
 	if (!valid && print) {
@@ -949,13 +978,15 @@ TEST_CASE( "swifft composes with carry bit by bit (specific input 2)", "[swifft]
 TEST_CASE( "swifft compacts correctly (specific input)", "[swifft]" ) {
 #define TESTCODE(suffix) \
 	{ \
+		swifft_object_t swifft; \
+		SWIFFT_InitObject##suffix(&swifft); \
 		SwifftOutput output; \
 		SwifftCompact compact; \
 		for (int i=0; i<ninputs; i++) { \
 			CAPTURE( i ); \
-			SWIFFT_Compute##suffix(specific_input1[i].data, output.data); \
+			swifft.hash.SWIFFT_Compute(specific_input1[i].data, output.data); \
 			REQUIRE( output == specific_output1[i] ); \
-			SWIFFT_Compact(output.data, compact.data); \
+			swifft.hash.SWIFFT_Compact(output.data, compact.data); \
 			REQUIRE( compact == specific_compact1[i] ); \
 		} \
 	}
@@ -975,13 +1006,15 @@ TEST_CASE( "swifft compacts correctly (specific input)", "[swifft]" ) {
 TEST_CASE( "swifft compacts signed correctly (specific input)", "[swifft]" ) {
 #define TESTCODE(suffix) \
 	{ \
+		swifft_object_t swifft; \
+		SWIFFT_InitObject##suffix(&swifft); \
 		SwifftOutput output; \
 		SwifftCompact compact; \
 		for (int i=0; i<ninputs; i++) { \
 			CAPTURE( i ); \
-			SWIFFT_ComputeSigned##suffix(specific_input1[i].data, SWIFFT_sign0, output.data); \
+			swifft.hash.SWIFFT_ComputeSigned(specific_input1[i].data, SWIFFT_sign0, output.data); \
 			REQUIRE( output == specific_output1[i] ); \
-			SWIFFT_Compact(output.data, compact.data); \
+			swifft.hash.SWIFFT_Compact(output.data, compact.data); \
 			REQUIRE( compact == specific_compact1[i] ); \
 		} \
 	}
@@ -1001,8 +1034,10 @@ TEST_CASE( "swifft compacts signed correctly (specific input)", "[swifft]" ) {
 TEST_CASE( "swifft computes multiple correctly (specific input)", "[swifft]" ) {
 #define TESTCODE(suffix) \
 	{ \
+		swifft_object_t swifft; \
+		SWIFFT_InitObject##suffix(&swifft); \
 		SwifftOutput output[ninputs]; \
-		SWIFFT_ComputeMultiple##suffix(ninputs, specific_input1[0].data, output[0].data); \
+		swifft.hash.SWIFFT_ComputeMultiple(ninputs, specific_input1[0].data, output[0].data); \
 		for (int i=0; i<ninputs; i++) { \
 			CAPTURE( i ); \
 			REQUIRE( output[i] == specific_output1[i] ); \
@@ -1024,9 +1059,11 @@ TEST_CASE( "swifft computes multiple correctly (specific input)", "[swifft]" ) {
 TEST_CASE( "swifft computes multiple signed correctly (specific input)", "[swifft]" ) {
 #define TESTCODE(suffix) \
 	{ \
+		swifft_object_t swifft; \
+		SWIFFT_InitObject##suffix(&swifft); \
 		SwifftInput sign0[ninputs] = {0}; \
 		SwifftOutput output[ninputs]; \
-		SWIFFT_ComputeMultipleSigned##suffix(ninputs, specific_input1[0].data, sign0[0].data, output[0].data); \
+		swifft.hash.SWIFFT_ComputeMultipleSigned(ninputs, specific_input1[0].data, sign0[0].data, output[0].data); \
 		for (int i=0; i<ninputs; i++) { \
 			CAPTURE( i ); \
 			REQUIRE( output[i] == specific_output1[i] ); \
@@ -1048,21 +1085,23 @@ TEST_CASE( "swifft computes multiple signed correctly (specific input)", "[swiff
 TEST_CASE( "swifft vector-and-const operations compute correctly", "[swifft]" ) {
 #define TESTCODE(suffix) \
 	{ \
+		swifft_object_t swifft; \
+		SWIFFT_InitObject##suffix(&swifft); \
 		SwifftOutput output1 = {0}, output2 = {0}; \
-		SWIFFT_ConstSet##suffix(output1.data, 1); \
-		SWIFFT_ConstSet##suffix(output2.data, 1); \
+		swifft.arith.SWIFFT_ConstSet(output1.data, 1); \
+		swifft.arith.SWIFFT_ConstSet(output2.data, 1); \
 		REQUIRE( output1 == output2 ); \
-		SWIFFT_ConstAdd##suffix(output1.data, 0); \
-		SWIFFT_ConstAdd##suffix(output2.data, 1); \
+		swifft.arith.SWIFFT_ConstAdd(output1.data, 0); \
+		swifft.arith.SWIFFT_ConstAdd(output2.data, 1); \
 		REQUIRE( output1 != output2 ); \
-		SWIFFT_ConstAdd##suffix(output1.data, 3); \
-		SWIFFT_ConstAdd##suffix(output2.data, 2); \
+		swifft.arith.SWIFFT_ConstAdd(output1.data, 3); \
+		swifft.arith.SWIFFT_ConstAdd(output2.data, 2); \
 		REQUIRE( output1 == output2 ); \
-		SWIFFT_ConstSub##suffix(output1.data, 1); \
-		SWIFFT_ConstSub##suffix(output2.data, 2); \
+		swifft.arith.SWIFFT_ConstSub(output1.data, 1); \
+		swifft.arith.SWIFFT_ConstSub(output2.data, 2); \
 		REQUIRE( output1 != output2 ); \
-		SWIFFT_ConstMul##suffix(output1.data, 2); \
-		SWIFFT_ConstMul##suffix(output2.data, 3); \
+		swifft.arith.SWIFFT_ConstMul(output1.data, 2); \
+		swifft.arith.SWIFFT_ConstMul(output2.data, 3); \
 		REQUIRE( output1 == output2 ); \
 	}
 	TESTCODE()
@@ -1081,17 +1120,19 @@ TEST_CASE( "swifft vector-and-const operations compute correctly", "[swifft]" ) 
 TEST_CASE( "swifft two-vectors operations compute correctly", "[swifft]" ) {
 #define TESTCODE(suffix) \
 	{ \
+		swifft_object_t swifft; \
+		SWIFFT_InitObject##suffix(&swifft); \
 		SwifftOutput output1 = {0}, output2 = {0}; \
 		for (int i=0; i<SWIFFT_OUTPUT_BLOCK_SIZE; i+=sizeof(int16_t)) { \
 			output1.data[i] = output2.data[i] = 1; \
 		} \
-		SWIFFT_Add##suffix(output1.data, output2.data); \
+		swifft.arith.SWIFFT_Add(output1.data, output2.data); \
 		REQUIRE( output1 != output2 ); \
-		SWIFFT_Mul##suffix(output2.data, output1.data); \
+		swifft.arith.SWIFFT_Mul(output2.data, output1.data); \
 		REQUIRE( output1 == output2 ); \
-		SWIFFT_Sub##suffix(output1.data, output2.data); \
+		swifft.arith.SWIFFT_Sub(output1.data, output2.data); \
 		REQUIRE( output1 != output2 ); \
-		SWIFFT_Sub##suffix(output2.data, output2.data); \
+		swifft.arith.SWIFFT_Sub(output2.data, output2.data); \
 		REQUIRE( output1 == output2 ); \
 	}
 	TESTCODE()
@@ -1128,6 +1169,8 @@ TEST_CASE( "swifft prints correctly (specific input)", "[swifft]" ) {
 
 #define TEST_CODE(op) \
 TEST_CASE( "swifft multiple " LIBSWIFFT_QUOTE(op) " computes correctly", "[swifft]" ) { \
+	swifft_object_t swifft; \
+	SWIFFT_InitObject(&swifft); \
 	const int n = 128; \
 	SwifftInput input1[n]; \
 	SwifftOutput output1[n]; \
@@ -1138,17 +1181,17 @@ TEST_CASE( "swifft multiple " LIBSWIFFT_QUOTE(op) " computes correctly", "[swiff
 		operand[i] = (int16_t)rand(); \
 	} \
 	randomize(input1, n); \
-	SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data); \
+	swifft.hash.SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data); \
 	for (int i=0; i<n; i++) { \
 		output2[i] = output1[i]; \
 	} \
 	for (int i=0; i<n; i++) { \
-		SWIFFT_##op(output1[i].data, operand[i]); \
+		swifft.arith.SWIFFT_##op(output1[i].data, operand[i]); \
 	} \
 	for (int i=0; i<n; i++) { \
 		REQUIRE(output1[i] != output2[i]); \
 	} \
-	SWIFFT_##op##Multiple(n, output2[0].data, operand); \
+	swifft.arith.SWIFFT_##op##Multiple(n, output2[0].data, operand); \
 	for (int i=0; i<n; i++) { \
 		REQUIRE(output1[i] == output2[i]); \
 	} \
@@ -1162,6 +1205,8 @@ TEST_CODE(ConstMul)
 
 #define TEST_CODE(op) \
 TEST_CASE( "swifft multiple " LIBSWIFFT_QUOTE(op) " computes correctly", "[swifft]" ) { \
+	swifft_object_t swifft; \
+	SWIFFT_InitObject(&swifft); \
 	const int n = 128; \
 	SwifftInput input1[n]; \
 	SwifftInput input2[n]; \
@@ -1171,18 +1216,18 @@ TEST_CASE( "swifft multiple " LIBSWIFFT_QUOTE(op) " computes correctly", "[swiff
 	srand(1); \
 	randomize(input1, n); \
 	randomize(input2, n); \
-	SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data); \
-	SWIFFT_ComputeMultiple(n, input2[0].data, output2[0].data); \
+	swifft.hash.SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data); \
+	swifft.hash.SWIFFT_ComputeMultiple(n, input2[0].data, output2[0].data); \
 	for (int i=0; i<n; i++) { \
 		output0[i] = output1[i]; \
 	} \
 	for (int i=0; i<n; i++) { \
-		SWIFFT_##op(output1[i].data, output2[i].data); \
+		swifft.arith.SWIFFT_##op(output1[i].data, output2[i].data); \
 	} \
 	for (int i=0; i<n; i++) { \
 		REQUIRE(output0[i] != output1[i]); \
 	} \
-	SWIFFT_##op##Multiple(n, output0[0].data, output2[0].data); \
+	swifft.arith.SWIFFT_##op##Multiple(n, output0[0].data, output2[0].data); \
 	for (int i=0; i<n; i++) { \
 		REQUIRE(output0[i] == output1[i]); \
 	} \
@@ -1195,6 +1240,8 @@ TEST_CODE(Mul)
 #undef TEST_CODE
 
 TEST_CASE( "swifft multiple compact computes correctly", "[swifft]" ) {
+	swifft_object_t swifft;
+	SWIFFT_InitObject(&swifft);
 	const int n = 128;
 	SwifftInput input1[n];
 	SwifftOutput output1[n];
@@ -1203,17 +1250,17 @@ TEST_CASE( "swifft multiple compact computes correctly", "[swifft]" ) {
 	SwifftCompact compact2[n];
 	srand(1);
 	randomize(input1, n);
-	SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data);
+	swifft.hash.SWIFFT_ComputeMultiple(n, input1[0].data, output1[0].data);
 	for (int i=0; i<n; i++) {
 		output2[i] = output1[i];
 	}
 	for (int i=0; i<n; i++) {
-		SWIFFT_Compact(output1[i].data, compact1[i].data);
+		swifft.hash.SWIFFT_Compact(output1[i].data, compact1[i].data);
 	}
 	for (int i=0; i<n; i++) {
 		REQUIRE(compact1[i] != compact2[i]);
 	}
-	SWIFFT_CompactMultiple(n, output2[0].data, compact2[0].data);
+	swifft.hash.SWIFFT_CompactMultiple(n, output2[0].data, compact2[0].data);
 	for (int i=0; i<n; i++) {
 		REQUIRE(compact1[i] == compact2[i]);
 	}

@@ -27,6 +27,7 @@ set(SWIFFT_SRC_FILES
 	swifft_avx.c
 	swifft_avx2.c
 	swifft_avx512.c
+	swifft_object.c
 )
 
 set(SWIFFT_HEADER_FILES
@@ -38,6 +39,7 @@ set(SWIFFT_HEADER_FILES
 	swifft.h
 	swifft.hpp
 	swifft_iset.inl
+	swifft_object.h
 	swifft_ver.h
 )
 set(SWIFFT_HEADERS_DIR include/libswifft)
