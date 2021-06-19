@@ -27,6 +27,8 @@ Performance tests are executed using a release build:
     make
     ./test/swifft_catch "[swifftperf]"
 
+For an OpenMP release build, add the option `-DSWIFFT_ENABLE_OPENMP=On` to the above `cmake` command line.
+
 ## Running Coverage Tests
 
 Coverage tests are executed using a debug build:
@@ -60,4 +62,4 @@ The doxygen configuration was set up using these steps:
   - Set `EXTRACT_ALL` to `YES`
   - Set `EXCLUDE` to `build`
 
-The doxygen generation can be ran using `doxygen doxygen.conf`.
+The doxygen generation can be ran using `doxygen Doxyfile`.

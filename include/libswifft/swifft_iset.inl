@@ -8,6 +8,7 @@
  */
 #include "libswifft/swifft_common.h"
 
+#undef SWIFFT_ISET_NAME
 #ifndef SWIFFT_ISET
         #error "SWIFFT_ISET() must be defined as AVX, AVX2, or AVX512"
 #endif

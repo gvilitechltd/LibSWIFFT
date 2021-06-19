@@ -8,7 +8,7 @@
 
 .. image:: ../assets/LibSWIFFT-logo.png
 
-`LibSWIFFT v1.1.1 <https://doi.org/10.21105/joss.03040>`_ |josspaper|
+`LibSWIFFT v1.2.0 <https://doi.org/10.21105/joss.03040>`_ |josspaper|
 
 .. |josspaper| image:: https://joss.theoj.org/papers/10.21105/joss.03040/status.svg
    :target: https://doi.org/10.21105/joss.03040
@@ -63,7 +63,7 @@ sets to take advantage of available hardware acceleration.
 Production-Ready
 ----------------
 
-LibSWIFFT v1.1.1 ships with over 30 test-cases including millions of checks that
+LibSWIFFT v1.2.0 ships with over 30 test-cases including millions of checks that
 provide excellent coverage of the library's code and the mathematical properties
 of the SWIFFT function it implements:
 
@@ -72,7 +72,7 @@ of the SWIFFT function it implements:
     $ ./test/swifft_catch
 
     ===============================================================================
-    All tests passed (6648383 assertions in 32 test cases)
+    All tests passed (6648384 assertions in 32 test cases)
 
 LibSWIFFT also ships with detailed documentation, including references for its
 :libswifft:`C API <swifft.h>` and :libswifft:`C++ API <LibSwifft>`. It has a
@@ -142,6 +142,27 @@ this:
     /* after input and sign are populated (not shown here), it is time to compute the hash: */
     SWIFFT_Compute(input.data, sign.data, output.data); /* compute the hash of the signed input into the output */
     SWIFFT_Compact(output.data, compact.data);
+
+For future flexibility in implementation, it is recommended to invoke SWIFFT
+functions via the :libswifft:`SWIFFT object APIs <swifft_object.h>` (since
+`v1.2.0`):
+
+.. code-block:: cpp
+
+    #include "libswifft/swifft_object.h"
+    using namespace LibSwifft;
+    /* initialize object APIs once, possibly inside a function: */
+    swifft_object_t swifft;
+    SWIFFT_InitObject(&swifft);
+    /* later, inside a function: */
+    SwifftInput input; /* auto-memory-aligned */
+    SwifftOutput output; /* auto-memory-aligned */
+    SwifftCompact compact; /* optional, auto-memory-aligned */
+    /* arithmetic operations are available via swifft.arith, for example: */
+    swifft.arith.SWIFFT_ConstSet(input.data, 1);
+    /* hash operations are available via swifft.hash, for example: */
+    swifft.hash.SWIFFT_Compute(input.data, output.data); /* compute the hash of the input into the output */
+    swifft.hash.SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
 
 Rationale
 =========
