@@ -292,7 +292,7 @@ TEST_CASE( "SWIFFT_fft is consistent across instruction-sets", "[swifft]" ) {
 	SwifftOutput output3 = {0};
 	SWIFFT_ALIGN int16_t fftout3[SWIFFT_N*SWIFFT_M] = {0};
 	swifft_avx512.fft.SWIFFT_fft(input.data, SWIFFT_sign0, SWIFFT_M, fftout3);
-	swifft.avx512.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout3, SWIFFT_M, (int16_t *)output3.data);
+	swifft_avx512.fft.SWIFFT_fftsum(SWIFFT_PI_key, fftout3, SWIFFT_M, (int16_t *)output3.data);
 	CHECK( 0 == memcmp(fftout0, fftout3, sizeof(fftout1)) );
 #endif
 }
