@@ -136,6 +136,27 @@ SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
 
 Assignment and equality operators are available for `Swifft{Input,Output,Compact}` instances. Arithemtic and arithmetic-assignment operators, corresponding to the arithmetic functions in the C API, are available for `SwifftOutput` instances.
 
+SWIFFT Object APIs are available since `v1.2.0` of `LibSWIFFT` and are recommended:
+
+```C
+#include "libswifft/swifft_object.h"
+using namespace LibSwifft;
+/* initialize object APIs once, possibly inside a function: */
+swifft_object_t swifft;
+SWIFFT_InitObject(&swifft);
+/* later, inside a function: */
+SwifftInput input; /* auto-memory-aligned */
+SwifftOutput output; /* auto-memory-aligned */
+SwifftCompact compact; /* optional, auto-memory-aligned */
+/* arithmetic operations are available via swifft.arith, for example: */
+swifft.arith.SWIFFT_ConstSet(input.data, 1);
+/* hash operations are available via swifft.hash, for example: */
+swifft.hash.SWIFFT_Compute(input.data, output.data); /* compute the hash of the input into the output */
+swifft.hash.SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
+```
+
+Using the object APIs makes it easy to switch their implementation in the future. For the complete SWIFFT object APIs, refer to the documentation or to `src/swifft_object.inl`.
+
 ## Building LibSWIFFT
 
 Currently, LibSWIFFT is implemented to be built using GCC. It has been tested on Linux Ubuntu 20.04 LTS using
@@ -179,10 +200,10 @@ By default, the build will be for the native machine. To build with different ma
 cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_MACHINE_COMPILE_FLAGS=-march=skylake
 ```
 
-To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
+To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` to the `cmake` command line, for example:
 
 ```sh
-cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_ENABLE_OPENMP=On
+cmake -DCMAKE_BUILD_TYPE=Release -DSWIFFT_ENABLE_OPENMP=On ../..
 ```
 
 After building, run the tests-executable from the `build/release` directory:

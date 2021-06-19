@@ -12,11 +12,11 @@ The code repository can be cloned using `git <https://git-scm.com>`_:
     git clone https://github.com/gvilitechltd/LibSWIFFT
     cd LibSWIFFT
 
-To switch to a specific version of LibSWIFFT, such as `v1.1.1`, use:
+To switch to a specific version of LibSWIFFT, such as `v1.2.0`, use:
 
 .. code-block:: sh
 
-    git checkout v1.1.1
+    git checkout v1.2.0
 
 As an alternative to getting the repository, a specific version of LibSWIFFT can
 be obtained from `GitHub <https://github.com/gvilitechltd/LibSWIFFT>`_ by
@@ -25,9 +25,9 @@ Then, unpack the archive and change into the unpacked directory, e.g.:
 
 .. code-block:: sh
 
-    wget https://github.com/gvilitechltd/LibSWIFFT/archive/v1.1.1.zip
-    unzip v1.1.1.zip
-    cd LibSWIFFT-1.1.1
+    wget https://github.com/gvilitechltd/LibSWIFFT/archive/v1.2.0.zip
+    unzip v1.2.0.zip
+    cd LibSWIFFT-1.2.0
 
 Building LibSWIFFT
 ------------------
@@ -73,11 +73,11 @@ By default, the build will be for the native machine. To build with different ma
 
     cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_MACHINE_COMPILE_FLAGS=-march=skylake
 
-To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` on the `cmake` command line, for example:
+To build with OpenMP, in particular for parallelizing multiple-block operations, add `-DSWIFFT_ENABLE_OPENMP=on` to the `cmake` command line, for example:
 
 .. code-block:: sh
 
-    cmake -DCMAKE_BUILD_TYPE=Release ../.. -DSWIFFT_ENABLE_OPENMP=On
+    cmake -DCMAKE_BUILD_TYPE=Release -DSWIFFT_ENABLE_OPENMP=On ../..
 
 After building, run the tests-executable from the `build/release` directory:
 
@@ -139,7 +139,6 @@ Typical code using the C API:
 
 Buffers must be memory-aligned in order to avoid a segmentation fault when passed to `LibSWIFFT` functions: statically allocated buffers should be aligned using `SWIFFT_ALIGN`, and dynamically allocated buffers should use an alignment of `SWIFFT_ALIGNMENT`, e.g., via `aligned_alloc` function in `stdlib.h`. The transformation functions :libswifft:`SWIFFT_ComputeMultiple`, :libswifft:`SWIFFT_ComputeMultipleSigned` and :libswifft:`SWIFFT_CompactMultiple` apply operations to multiple blocks. The arithmetic functions :libswifft:`SWIFFT_ConstSet`, :libswifft:`SWIFFT_ConstAdd`, :libswifft:`SWIFFT_ConstSub`, :libswifft:`SWIFFT_ConstMul`, :libswifft:`SWIFFT_Set`, :libswifft:`SWIFFT_Add`, :libswifft:`SWIFFT_Sub`, :libswifft:`SWIFFT_Mul` provide vectorized and homomorphic operations on an output block, while :libswifft:`SWIFFT_ConstSetMultiple`, :libswifft:`SWIFFT_ConstAddMultiple`, :libswifft:`SWIFFT_ConstSubMultiple`, :libswifft:`SWIFFT_ConstMulMultiple`, :libswifft:`SWIFFT_SetMultiple`, :libswifft:`SWIFFT_AddMultiple`, :libswifft:`SWIFFT_SubMultiple`, :libswifft:`SWIFFT_Mul` provide corresponding operations to multiple blocks.
 
-
 Typical code using the C++ API:
 
 .. code-block:: cpp
@@ -159,4 +158,23 @@ Typical code using the C++ API:
     SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
 
 Assignment and equality operators are available for :libswifft:`SwifftInput`, :libswifft:`SwifftOutput`, :libswifft:`SwifftCompact` instances. Arithemtic and arithmetic-assignment operators, corresponding to the arithmetic functions in the C API, are available for :libswifft:`SwifftOutput` instances.
+
+Typical code using the recommended SWIFFT object APIs (since `v1.2.0`):
+
+.. code-block:: cpp
+
+    #include "libswifft/swifft_object.h"
+    using namespace LibSwifft;
+    /* initialize object APIs once, possibly inside a function: */
+    swifft_object_t swifft;
+    SWIFFT_InitObject(&swifft);
+    /* later, inside a function: */
+    SwifftInput input; /* auto-memory-aligned */
+    SwifftOutput output; /* auto-memory-aligned */
+    SwifftCompact compact; /* optional, auto-memory-aligned */
+    /* arithmetic operations are available via swifft.arith, for example: */
+    swifft.arith.SWIFFT_ConstSet(input.data, 1);
+    /* hash operations are available via swifft.hash, for example: */
+    swifft.hash.SWIFFT_Compute(input.data, output.data); /* compute the hash of the input into the output */
+    swifft.hash.SWIFFT_Compact(output.data, compact.data); /* optionally, compact the hash */
 

@@ -37,7 +37,7 @@ copyright = '2021, Gvili Tech Ltd'
 author = 'Gvili Tech Ltd'
 
 # The full version, including alpha/beta/rc tags
-release = 'v1.1.1'
+release = 'v1.2.0'
 
 
 # -- General configuration ---------------------------------------------------
