@@ -1,4 +1,5 @@
 include(../cmake/swifft_defaults.cmake)
+include(../cmake/flink.cmake)
 
 add_executable(swifft_keygen swifft_keygen.cpp)
 
@@ -57,10 +58,8 @@ add_library(swifft_shared SHARED ${CMAKE_CURRENT_BINARY_DIR}/swifft_so_dummy.c)
 install(TARGETS swifft_shared DESTINATION lib)
 set_target_properties(swifft_shared PROPERTIES OUTPUT_NAME swifft)
 set_target_properties(swifft_shared PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(swifft_shared PUBLIC
-	-Wl,--whole-archive
-	$<TARGET_PROPERTY:swifft_static,NAME>
-	-Wl,--no-whole-archive
+target_force_link_libraries(swifft_shared
+	PUBLIC $<TARGET_PROPERTY:swifft_static,NAME>
 )
 
 
