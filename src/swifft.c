@@ -392,4 +392,15 @@ void SWIFFT_ComputeMultipleSigned(int nblocks, const BitSequence * input,
 	SWIFFT_ISET_NAME(SWIFFT_ComputeMultipleSigned_)(nblocks, input, sign, output);
 }
 
+//! \brief Computes the result of a SWIFFT operation and returns the value. Made to be compatible with Python.
+//! The result is composable with other hash values.
+//!
+//! \param[in] input the input of 256 bytes (2048 bit).
+BitSequence SWIFFT_Hash(const BitSequence input[SWIFFT_INPUT_BLOCK_SIZE])
+{
+	SWIFFT_ALIGN BitSequence result[SWIFFT_OUTPUT_BLOCK_SIZE];
+	SWIFFT_Compute(input, result);
+	return result;
+}
+
 LIBSWIFFT_END_EXTERN_C
